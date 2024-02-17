@@ -9,17 +9,21 @@
 #include <SPI.h>
 #include <nRF24L01.h>
 #include <RF24.h>
+#include <RF24_config.h>
+#include <printf.h>
 
-#define Left_X A2;
-#define Left_Y A1;
-#define Right_X A3;
-#define Right_y A4;
+// lez go bois
+
+#define Left_X A2
+#define Left_Y A1
+#define Right_X A3
+#define Right_y A4
 
 // note that the range of analog input form the joystick
 // is 0 - 1024, therefore the middle point is around (512,512)
 // im so proud of myself for figuring this out
-#define JoStick_Upper_TH 91;
-#define JoStick_Lower_TH 89;
+#define JoStick_Upper_TH 91
+#define JoStick_Lower_TH 89
 
 // initiallizing the CE and CSN pin for RC transmission
 RF24 radio(7, 8); // CE, CSN
@@ -68,7 +72,7 @@ void loop() {
   Ypos_Left = map(analogRead(Left_Y), 0, 1023, 0, 180);
   // reading the value of the rght hand joy stick
   Xpos_Right = map(analogRead(Right_X),0 ,1023, 0, 180);
-  Ypos_Right = map(analogRead(Right_y),0 , 1023, 0, 180;
+  Ypos_Right = map(analogRead(Right_y),0 , 1023, 0, 180);
 
   // checking if the joysticks pass a threshold value so we dont end
   // up sending  a lot of garbage values around 90 degrees
@@ -76,7 +80,7 @@ void loop() {
     // sending the Xpos_left though the NRF
     // selecting channel 1 for transmitting Xpos_Left
     radio.setChannel(address[0]);
-    radio.write(&Xpos_Left, Sizeof(Xpos_Left));
+    radio.write(&Xpos_Left, sizeof(Xpos_Left));
   }
 
   // checking the value of Ypos_Left
@@ -84,21 +88,21 @@ void loop() {
     // sending the Xpos_left though the NRF
     // selecting channel 1 for transmitting Xpos_Left
     radio.setChannel(address[1]);
-    radio.write(&Ypos_Left, Sizeof(Ypos_Left));
+    radio.write(&Ypos_Left, sizeof(Ypos_Left));
   }
 
   if (Xpos_Right > JoStick_Upper_TH || Xpos_Right < JoStick_Lower_TH){
     // sending the Xpos_left though the NRF
     // selecting channel 1 for transmitting Xpos_Left
     radio.setChannel(address[2]);
-    radio.write(&Xpos_Right, Sizeof(Xpos_Right));
+    radio.write(&Xpos_Right, sizeof(Xpos_Right));
   }
 
   if (Ypos_Right > JoStick_Upper_TH || Ypos_Right < JoStick_Lower_TH){
     // sending the Xpos_left though the NRF
     // selecting channel 1 for transmitting Xpos_Left
     radio.setChannel(address[0]);
-    radio.write(&Ypos_Right, Sizeof(Ypos_Right));
+    radio.write(&Ypos_Right, sizeof(Ypos_Right));
   }
 
 }
