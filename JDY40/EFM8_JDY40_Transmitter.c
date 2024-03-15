@@ -337,6 +337,7 @@ void main (void)
 {
 	float X_pos_L;
 	char X_pos_L_string[5];
+	int count = 0;
 	
 	// here is the initiallization code
 	waitms(500);
@@ -377,9 +378,11 @@ void main (void)
 	{
 		// readng the analog voltage of left joystick X position
 		// on pin 2.1
+
 		X_pos_L = Volts_at_Pin(QFP32_MUX_P2_1);
-		sprintf(buff, "L%f", X_pos_L);
-		//printf("%s\n",X_pos_L_string);
+		sprintf(buff, "L%3.5f\r\n", X_pos_L);
+
+		//sprintf(buff, "test %d\n",count++);
 		sendstr1(buff);
 		
 		waitms_or_RI1(100);

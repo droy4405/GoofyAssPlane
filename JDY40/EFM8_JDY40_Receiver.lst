@@ -1,7 +1,7 @@
 0000              1   ;--------------------------------------------------------
 0000              2   ; File Created by C51
 0000              3   ; Version 1.0.0 #1170 (Feb 16 2022) (MSVC)
-0000              4   ; This file was generated Thu Mar 14 19:48:32 2024
+0000              4   ; This file was generated Fri Mar 15 16:10:53 2024
 0000              5   ;--------------------------------------------------------
                   5   $name EFM8_JDY40_Receiver
                   6   $optc51 --model-small
@@ -581,7 +581,7 @@
 001E            581   ;        EFM8_JDY40_Receiver.c:51: while ((CLKSEL & 0x80) == 0);
 001E            582   L002001?:
 001E E5A9       583            mov     a,_CLKSEL
-0020 30E7A0     584            jnb     acc.7,L002001?
+0020 30E7E0     584            jnb     acc.7,L002001?
 0023            585   ;        EFM8_JDY40_Receiver.c:52: CLKSEL = 0x03;
 0023 75A903     586            mov     _CLKSEL,#0x03
 0026            587   ;        EFM8_JDY40_Receiver.c:53: CLKSEL = 0x03;
@@ -589,7 +589,7 @@
 0029            589   ;        EFM8_JDY40_Receiver.c:54: while ((CLKSEL & 0x80) == 0);
 0029            590   L002004?:
 0029 E5A9       591            mov     a,_CLKSEL
-002B 30E720     592            jnb     acc.7,L002004?
+002B 30E760     592            jnb     acc.7,L002004?
 002E            593   ;        EFM8_JDY40_Receiver.c:59: P0MDOUT |= 0x11; // Enable UART0 TX (P0.4) and UART1 TX (P0.0) as push-pull outputs
 002E 43A411     594            orl     _P0MDOUT,#0x11
 0031            595   ;        EFM8_JDY40_Receiver.c:60: P2MDOUT |= 0x01; // P2.0 in push-pull mode
@@ -649,7 +649,7 @@
 006F            649   ;        EFM8_JDY40_Receiver.c:94: while (!(TMR3CN0 & 0x80));  // Wait for overflow
 006F            650   L003001?:
 006F E591       651            mov     a,_TMR3CN0
-0071 30E720     652            jnb     acc.7,L003001?
+0071 30E760     652            jnb     acc.7,L003001?
 0074            653   ;        EFM8_JDY40_Receiver.c:95: TMR3CN0 &= ~(0x80);         // Clear overflow indicator
 0074 53917F     654            anl     _TMR3CN0,#0x7F
 0077            655   ;        EFM8_JDY40_Receiver.c:92: for (i = 0; i < us; i++)       // Count <us> overflows
@@ -686,7 +686,7 @@
 008D            686   ;        EFM8_JDY40_Receiver.c:105: for (k=0; k<4; k++) Timer3us(250);
 008D 7E00       687            mov     r6,#0x00
 008F            688   L004001?:
-008F BE0460     689            cjne    r6,#0x04,L004018?
+008F BE04A0     689            cjne    r6,#0x04,L004018?
 0092            690   L004018?:
 0092 5000       691            jnc     L004007?
 0094 7582FA     692            mov     dpl,#0xFA
@@ -706,7 +706,7 @@
 00B1            706   L004007?:
 00B1            707   ;        EFM8_JDY40_Receiver.c:104: for(j=0; j<ms; j++)
 00B1 0C         708            inc     r4
-00B2 BC00A0     709            cjne    r4,#0x00,L004005?
+00B2 BC00E0     709            cjne    r4,#0x00,L004005?
 00B5 0D         710            inc     r5
 00B6 8000       711            sjmp    L004005?
 00B8            712   L004009?:
@@ -796,7 +796,7 @@
 011F            796   ;        EFM8_JDY40_Receiver.c:123: while (!TI1);
 011F            797   L006001?:
 011F            798   ;        EFM8_JDY40_Receiver.c:124: TI1=0;
-011F 10C9F0     799            jbc     _TI1,L006008?
+011F 10C930     799            jbc     _TI1,L006008?
 0122 8000       800            sjmp    L006001?
 0124            801   L006008?:
 0124            802   ;        EFM8_JDY40_Receiver.c:125: SBUF1 = c;
@@ -836,7 +836,7 @@
 014B D002       836            pop     ar2
 014D            837   ;        EFM8_JDY40_Receiver.c:134: s++;         
 014D 0A         838            inc     r2
-014E BA0030     839            cjne    r2,#0x00,L007001?
+014E BA0070     839            cjne    r2,#0x00,L007001?
 0151 0B         840            inc     r3
 0152 8000       841            sjmp    L007001?
 0154            842   L007004?:
@@ -856,7 +856,7 @@
 0158            856   ;        EFM8_JDY40_Receiver.c:142: while (!RI1);
 0158            857   L008001?:
 0158            858   ;        EFM8_JDY40_Receiver.c:143: RI1=0;
-0158 10C830     859            jbc     _RI1,L008008?
+0158 10C870     859            jbc     _RI1,L008008?
 015B 8000       860            sjmp    L008001?
 015D            861   L008008?:
 015D            862   ;        EFM8_JDY40_Receiver.c:145: SCON1&=0b_0011_1111;
@@ -884,7 +884,7 @@
 016A 7A00       884            mov     r2,#0x00
 016C 7B00       885            mov     r3,#0x00
 016E            886   L009003?:
-016E 20C8B0     887            jb      _RI1,L009005?
+016E 20C8F0     887            jb      _RI1,L009005?
 0171            888   ;        EFM8_JDY40_Receiver.c:159: SFRPAGE = 0x00;
 0171 75A700     889            mov     _SFRPAGE,#0x00
 0174            890   ;        EFM8_JDY40_Receiver.c:160: Timer3us(20);
@@ -898,12 +898,12 @@
 0182 75A720     898            mov     _SFRPAGE,#0x20
 0185            899   ;        EFM8_JDY40_Receiver.c:162: timeout++;
 0185 0A         900            inc     r2
-0186 BA00F0     901            cjne    r2,#0x00,L009012?
+0186 BA0030     901            cjne    r2,#0x00,L009012?
 0189 0B         902            inc     r3
 018A            903   L009012?:
 018A            904   ;        EFM8_JDY40_Receiver.c:163: if(timeout==25000)
-018A BAA870     905            cjne    r2,#0xA8,L009003?
-018D BB6170     906            cjne    r3,#0x61,L009003?
+018A BAA8B0     905            cjne    r2,#0xA8,L009003?
+018D BB61B0     906            cjne    r3,#0x61,L009003?
 0190            907   ;        EFM8_JDY40_Receiver.c:165: SFRPAGE = 0x00;
 0190 75A700     908            mov     _SFRPAGE,#0x00
 0193            909   ;        EFM8_JDY40_Receiver.c:166: return ('\n'); // Timeout after half second
@@ -946,7 +946,7 @@
 01B6 D003       946            pop     ar3
 01B8 D002       947            pop     ar2
 01BA            948   ;        EFM8_JDY40_Receiver.c:184: if(c=='\n')
-01BA BD0A70     949            cjne    r5,#0x0A,L010002?
+01BA BD0AB0     949            cjne    r5,#0x0A,L010002?
 01BD            950   ;        EFM8_JDY40_Receiver.c:186: *s=0;
 01BD 8A82       951            mov     dpl,r2
 01BF 8B83       952            mov     dph,r3
@@ -1010,7 +1010,7 @@
 01F0           1010   ;        EFM8_JDY40_Receiver.c:210: for (k=0; k<4; k++)
 01F0 7E00      1011            mov     r6,#0x00
 01F2           1012   L012003?:
-01F2 BE04B0    1013            cjne    r6,#0x04,L012019?
+01F2 BE04F0    1013            cjne    r6,#0x04,L012019?
 01F5           1014   L012019?:
 01F5 5000      1015            jnc     L012009?
 01F7           1016   ;        EFM8_JDY40_Receiver.c:212: if(RXU1()) return;
@@ -1049,7 +1049,7 @@
 0230           1049   L012009?:
 0230           1050   ;        EFM8_JDY40_Receiver.c:208: for(j=0; j<ms; j++)
 0230 0C        1051            inc     r4
-0231 BC00F0    1052            cjne    r4,#0x00,L012007?
+0231 BC0030    1052            cjne    r4,#0x00,L012007?
 0234 0D        1053            inc     r5
 0235 8000      1054            sjmp    L012007?
 0237           1055   L012011?:
@@ -1074,7 +1074,7 @@
 0244 C002      1074            push    ar2
 0246 C003      1075            push    ar3
 0248 C004      1076            push    ar4
-024A 7470      1077            mov     a,#__str_0
+024A 74B0      1077            mov     a,#__str_0
 024C C0E0      1078            push    acc
 024E 74BD      1079            mov     a,#(__str_0 >> 8)
 0250 C0E0      1080            push    acc
@@ -1097,175 +1097,178 @@
 026F 8B83      1097            mov     dph,r3
 0271 8CF0      1098            mov     b,r4
 0273 120000    1099            lcall   _sendstr1
-0276           1100   ;        EFM8_JDY40_Receiver.c:224: P2_0=1; // 'set' pin to 1 is normal operation mode.
-0276 D2A0      1101            setb    _P2_0
-0278 22        1102            ret
-0279           1103   ;------------------------------------------------------------
-0279           1104   ;Allocation info for local variables in function 'main'
-0279           1105   ;------------------------------------------------------------
-0279           1106   ;sAngle                    Allocated with name '_main_sAngle_1_94'
-0279           1107   ;i                         Allocated with name '_main_i_1_94'
-0279           1108   ;s                         Allocated with name '_main_s_1_94'
-0279           1109   ;------------------------------------------------------------
-0279           1110   ;        EFM8_JDY40_Receiver.c:227: void main (void)
-0279           1111   ;        -----------------------------------------
-0279           1112   ;         function main
-0279           1113   ;        -----------------------------------------
-0279           1114   _main:
-0279           1115   ;        EFM8_JDY40_Receiver.c:233: waitms(500);
-0279 9001F4    1116            mov     dptr,#0x01F4
-027C 120000    1117            lcall   _waitms
-027F           1118   ;        EFM8_JDY40_Receiver.c:234: printf("\r\nJDY-40 test\r\n");
-027F 7430      1119            mov     a,#__str_1
-0281 C0E0      1120            push    acc
-0283 74BE      1121            mov     a,#(__str_1 >> 8)
-0285 C0E0      1122            push    acc
-0287 7480      1123            mov     a,#0x80
-0289 C0E0      1124            push    acc
-028B 120000    1125            lcall   _printf
-028E 1581      1126            dec     sp
-0290 1581      1127            dec     sp
-0292 1581      1128            dec     sp
-0294           1129   ;        EFM8_JDY40_Receiver.c:235: UART1_Init(9600);
-0294 902580    1130            mov     dptr,#0x2580
-0297 E4        1131            clr     a
-0298 F5F0      1132            mov     b,a
-029A 120000    1133            lcall   _UART1_Init
-029D           1134   ;        EFM8_JDY40_Receiver.c:251: SendATCommand("AT+DVID0001\r\n");  
-029D 90BE70    1135            mov     dptr,#__str_2
-02A0 75F080    1136            mov     b,#0x80
-02A3 120000    1137            lcall   _SendATCommand
-02A6           1138   ;        EFM8_JDY40_Receiver.c:254: SendATCommand("AT+VER\r\n");
-02A6 90BEB0    1139            mov     dptr,#__str_3
-02A9 75F080    1140            mov     b,#0x80
-02AC 120000    1141            lcall   _SendATCommand
-02AF           1142   ;        EFM8_JDY40_Receiver.c:255: SendATCommand("AT+BAUD\r\n");
-02AF 90BEF0    1143            mov     dptr,#__str_4
-02B2 75F080    1144            mov     b,#0x80
-02B5 120000    1145            lcall   _SendATCommand
-02B8           1146   ;        EFM8_JDY40_Receiver.c:256: SendATCommand("AT+RFID\r\n");
-02B8 90BF30    1147            mov     dptr,#__str_5
-02BB 75F080    1148            mov     b,#0x80
-02BE 120000    1149            lcall   _SendATCommand
-02C1           1150   ;        EFM8_JDY40_Receiver.c:257: SendATCommand("AT+DVID\r\n");
-02C1 90BF70    1151            mov     dptr,#__str_6
-02C4 75F080    1152            mov     b,#0x80
-02C7 120000    1153            lcall   _SendATCommand
-02CA           1154   ;        EFM8_JDY40_Receiver.c:258: SendATCommand("AT+RFC\r\n");
-02CA 90BFB0    1155            mov     dptr,#__str_7
-02CD 75F080    1156            mov     b,#0x80
-02D0 120000    1157            lcall   _SendATCommand
-02D3           1158   ;        EFM8_JDY40_Receiver.c:259: SendATCommand("AT+POWE\r\n");
-02D3 90BFF0    1159            mov     dptr,#__str_8
-02D6 75F080    1160            mov     b,#0x80
-02D9 120000    1161            lcall   _SendATCommand
-02DC           1162   ;        EFM8_JDY40_Receiver.c:260: SendATCommand("AT+CLSS\r\n");
-02DC 90C030    1163            mov     dptr,#__str_9
-02DF 75F080    1164            mov     b,#0x80
-02E2 120000    1165            lcall   _SendATCommand
-02E5           1166   ;        EFM8_JDY40_Receiver.c:262: while(1)
-02E5           1167   L014004?:
-02E5           1168   ;        EFM8_JDY40_Receiver.c:264: if(RXU1())
-02E5 120000    1169            lcall   _RXU1
-02E8 5000      1170            jnc     L014002?
-02EA           1171   ;        EFM8_JDY40_Receiver.c:266: getstr1(buff);
-02EA 9014B0    1172            mov     dptr,#_buff
-02ED 75F040    1173            mov     b,#0x40
-02F0 120000    1174            lcall   _getstr1
-02F3           1175   ;        EFM8_JDY40_Receiver.c:274: printf("%s",buff);
-02F3 74B0      1176            mov     a,#_buff
-02F5 C0E0      1177            push    acc
-02F7 7414      1178            mov     a,#(_buff >> 8)
-02F9 C0E0      1179            push    acc
-02FB 7440      1180            mov     a,#0x40
-02FD C0E0      1181            push    acc
-02FF 74F0      1182            mov     a,#__str_10
-0301 C0E0      1183            push    acc
-0303 74C0      1184            mov     a,#(__str_10 >> 8)
-0305 C0E0      1185            push    acc
-0307 7480      1186            mov     a,#0x80
-0309 C0E0      1187            push    acc
-030B 120000    1188            lcall   _printf
-030E E581      1189            mov     a,sp
-0310 24FA      1190            add     a,#0xfa
-0312 F581      1191            mov     sp,a
-0314           1192   L014002?:
-0314           1193   ;        EFM8_JDY40_Receiver.c:277: waitms_or_RI1(100);
-0314 900064    1194            mov     dptr,#0x0064
-0317 120000    1195            lcall   _waitms_or_RI1
-031A 8000      1196            sjmp    L014004?
-031C           1197            rseg R_CSEG
-031C           1198   
-0000           1199            rseg R_XINIT
-0000           1200   
-0000           1201            rseg R_CONST
-0000           1202   __str_0:
-0000 436F6D6D  1203            db 'Command: %s'
+0276           1100   ;        EFM8_JDY40_Receiver.c:224: waitms(10);
+0276 90000A    1101            mov     dptr,#0x000A
+0279 120000    1102            lcall   _waitms
+027C           1103   ;        EFM8_JDY40_Receiver.c:225: P2_0=1; // 'set' pin to 1 is normal operation mode.
+027C D2A0      1104            setb    _P2_0
+027E 22        1105            ret
+027F           1106   ;------------------------------------------------------------
+027F           1107   ;Allocation info for local variables in function 'main'
+027F           1108   ;------------------------------------------------------------
+027F           1109   ;sAngle                    Allocated with name '_main_sAngle_1_94'
+027F           1110   ;i                         Allocated with name '_main_i_1_94'
+027F           1111   ;s                         Allocated with name '_main_s_1_94'
+027F           1112   ;------------------------------------------------------------
+027F           1113   ;        EFM8_JDY40_Receiver.c:228: void main (void)
+027F           1114   ;        -----------------------------------------
+027F           1115   ;         function main
+027F           1116   ;        -----------------------------------------
+027F           1117   _main:
+027F           1118   ;        EFM8_JDY40_Receiver.c:234: waitms(500);
+027F 9001F4    1119            mov     dptr,#0x01F4
+0282 120000    1120            lcall   _waitms
+0285           1121   ;        EFM8_JDY40_Receiver.c:235: printf("\r\nJDY-40 test\r\n");
+0285 7470      1122            mov     a,#__str_1
+0287 C0E0      1123            push    acc
+0289 74BE      1124            mov     a,#(__str_1 >> 8)
+028B C0E0      1125            push    acc
+028D 7480      1126            mov     a,#0x80
+028F C0E0      1127            push    acc
+0291 120000    1128            lcall   _printf
+0294 1581      1129            dec     sp
+0296 1581      1130            dec     sp
+0298 1581      1131            dec     sp
+029A           1132   ;        EFM8_JDY40_Receiver.c:236: UART1_Init(9600);
+029A 902580    1133            mov     dptr,#0x2580
+029D E4        1134            clr     a
+029E F5F0      1135            mov     b,a
+02A0 120000    1136            lcall   _UART1_Init
+02A3           1137   ;        EFM8_JDY40_Receiver.c:252: SendATCommand("AT+DVID2385\r\n");  
+02A3 90BEB0    1138            mov     dptr,#__str_2
+02A6 75F080    1139            mov     b,#0x80
+02A9 120000    1140            lcall   _SendATCommand
+02AC           1141   ;        EFM8_JDY40_Receiver.c:255: SendATCommand("AT+VER\r\n");
+02AC 90BEF0    1142            mov     dptr,#__str_3
+02AF 75F080    1143            mov     b,#0x80
+02B2 120000    1144            lcall   _SendATCommand
+02B5           1145   ;        EFM8_JDY40_Receiver.c:256: SendATCommand("AT+BAUD\r\n");
+02B5 90BF30    1146            mov     dptr,#__str_4
+02B8 75F080    1147            mov     b,#0x80
+02BB 120000    1148            lcall   _SendATCommand
+02BE           1149   ;        EFM8_JDY40_Receiver.c:257: SendATCommand("AT+RFID\r\n");
+02BE 90BF70    1150            mov     dptr,#__str_5
+02C1 75F080    1151            mov     b,#0x80
+02C4 120000    1152            lcall   _SendATCommand
+02C7           1153   ;        EFM8_JDY40_Receiver.c:258: SendATCommand("AT+DVID\r\n");
+02C7 90BFB0    1154            mov     dptr,#__str_6
+02CA 75F080    1155            mov     b,#0x80
+02CD 120000    1156            lcall   _SendATCommand
+02D0           1157   ;        EFM8_JDY40_Receiver.c:259: SendATCommand("AT+RFC\r\n");
+02D0 90BFF0    1158            mov     dptr,#__str_7
+02D3 75F080    1159            mov     b,#0x80
+02D6 120000    1160            lcall   _SendATCommand
+02D9           1161   ;        EFM8_JDY40_Receiver.c:260: SendATCommand("AT+POWE\r\n");
+02D9 90C030    1162            mov     dptr,#__str_8
+02DC 75F080    1163            mov     b,#0x80
+02DF 120000    1164            lcall   _SendATCommand
+02E2           1165   ;        EFM8_JDY40_Receiver.c:261: SendATCommand("AT+CLSS\r\n");
+02E2 90C070    1166            mov     dptr,#__str_9
+02E5 75F080    1167            mov     b,#0x80
+02E8 120000    1168            lcall   _SendATCommand
+02EB           1169   ;        EFM8_JDY40_Receiver.c:263: while(1)
+02EB           1170   L014004?:
+02EB           1171   ;        EFM8_JDY40_Receiver.c:265: if(RXU1())
+02EB 120000    1172            lcall   _RXU1
+02EE 5000      1173            jnc     L014002?
+02F0           1174   ;        EFM8_JDY40_Receiver.c:267: getstr1(buff);
+02F0 9014B0    1175            mov     dptr,#_buff
+02F3 75F040    1176            mov     b,#0x40
+02F6 120000    1177            lcall   _getstr1
+02F9           1178   ;        EFM8_JDY40_Receiver.c:274: printf("%s",buff);
+02F9 74B0      1179            mov     a,#_buff
+02FB C0E0      1180            push    acc
+02FD 7414      1181            mov     a,#(_buff >> 8)
+02FF C0E0      1182            push    acc
+0301 7440      1183            mov     a,#0x40
+0303 C0E0      1184            push    acc
+0305 7430      1185            mov     a,#__str_10
+0307 C0E0      1186            push    acc
+0309 74C1      1187            mov     a,#(__str_10 >> 8)
+030B C0E0      1188            push    acc
+030D 7480      1189            mov     a,#0x80
+030F C0E0      1190            push    acc
+0311 120000    1191            lcall   _printf
+0314 E581      1192            mov     a,sp
+0316 24FA      1193            add     a,#0xfa
+0318 F581      1194            mov     sp,a
+031A           1195   L014002?:
+031A           1196   ;        EFM8_JDY40_Receiver.c:277: waitms_or_RI1(100);
+031A 900064    1197            mov     dptr,#0x0064
+031D 120000    1198            lcall   _waitms_or_RI1
+0320 8000      1199            sjmp    L014004?
+0322           1200            rseg R_CSEG
+0322           1201   
+0000           1202            rseg R_XINIT
+0000           1203   
+0000           1204            rseg R_CONST
+0000           1205   __str_0:
+0000 436F6D6D  1206            db 'Command: %s'
      616E643A
      202573
-000B 00        1204            db 0x00
-000C           1205   __str_1:
-000C 0D        1206            db 0x0D
-000D 0A        1207            db 0x0A
-000E 4A44592D  1208            db 'JDY-40 test'
+000B 00        1207            db 0x00
+000C           1208   __str_1:
+000C 0D        1209            db 0x0D
+000D 0A        1210            db 0x0A
+000E 4A44592D  1211            db 'JDY-40 test'
      34302074
      657374
-0019 0D        1209            db 0x0D
-001A 0A        1210            db 0x0A
-001B 00        1211            db 0x00
-001C           1212   __str_2:
-001C 41542B44  1213            db 'AT+DVID0001'
-     56494430
-     303031
-0027 0D        1214            db 0x0D
-0028 0A        1215            db 0x0A
-0029 00        1216            db 0x00
-002A           1217   __str_3:
-002A 41542B56  1218            db 'AT+VER'
+0019 0D        1212            db 0x0D
+001A 0A        1213            db 0x0A
+001B 00        1214            db 0x00
+001C           1215   __str_2:
+001C 41542B44  1216            db 'AT+DVID2385'
+     56494432
+     333835
+0027 0D        1217            db 0x0D
+0028 0A        1218            db 0x0A
+0029 00        1219            db 0x00
+002A           1220   __str_3:
+002A 41542B56  1221            db 'AT+VER'
      4552
-0030 0D        1219            db 0x0D
-0031 0A        1220            db 0x0A
-0032 00        1221            db 0x00
-0033           1222   __str_4:
-0033 41542B42  1223            db 'AT+BAUD'
+0030 0D        1222            db 0x0D
+0031 0A        1223            db 0x0A
+0032 00        1224            db 0x00
+0033           1225   __str_4:
+0033 41542B42  1226            db 'AT+BAUD'
      415544
-003A 0D        1224            db 0x0D
-003B 0A        1225            db 0x0A
-003C 00        1226            db 0x00
-003D           1227   __str_5:
-003D 41542B52  1228            db 'AT+RFID'
+003A 0D        1227            db 0x0D
+003B 0A        1228            db 0x0A
+003C 00        1229            db 0x00
+003D           1230   __str_5:
+003D 41542B52  1231            db 'AT+RFID'
      464944
-0044 0D        1229            db 0x0D
-0045 0A        1230            db 0x0A
-0046 00        1231            db 0x00
-0047           1232   __str_6:
-0047 41542B44  1233            db 'AT+DVID'
+0044 0D        1232            db 0x0D
+0045 0A        1233            db 0x0A
+0046 00        1234            db 0x00
+0047           1235   __str_6:
+0047 41542B44  1236            db 'AT+DVID'
      564944
-004E 0D        1234            db 0x0D
-004F 0A        1235            db 0x0A
-0050 00        1236            db 0x00
-0051           1237   __str_7:
-0051 41542B52  1238            db 'AT+RFC'
+004E 0D        1237            db 0x0D
+004F 0A        1238            db 0x0A
+0050 00        1239            db 0x00
+0051           1240   __str_7:
+0051 41542B52  1241            db 'AT+RFC'
      4643
-0057 0D        1239            db 0x0D
-0058 0A        1240            db 0x0A
-0059 00        1241            db 0x00
-005A           1242   __str_8:
-005A 41542B50  1243            db 'AT+POWE'
+0057 0D        1242            db 0x0D
+0058 0A        1243            db 0x0A
+0059 00        1244            db 0x00
+005A           1245   __str_8:
+005A 41542B50  1246            db 'AT+POWE'
      4F5745
-0061 0D        1244            db 0x0D
-0062 0A        1245            db 0x0A
-0063 00        1246            db 0x00
-0064           1247   __str_9:
-0064 41542B43  1248            db 'AT+CLSS'
+0061 0D        1247            db 0x0D
+0062 0A        1248            db 0x0A
+0063 00        1249            db 0x00
+0064           1250   __str_9:
+0064 41542B43  1251            db 'AT+CLSS'
      4C5353
-006B 0D        1249            db 0x0D
-006C 0A        1250            db 0x0A
-006D 00        1251            db 0x00
-006E           1252   __str_10:
-006E 2573      1253            db '%s'
-0070 00        1254            db 0x00
-0071           1255   
-0003           1256            CSEG
-0003           1257   
-0003           1258   end
+006B 0D        1252            db 0x0D
+006C 0A        1253            db 0x0A
+006D 00        1254            db 0x00
+006E           1255   __str_10:
+006E 2573      1256            db '%s'
+0070 00        1257            db 0x00
+0071           1258   
+0003           1259            CSEG
+0003           1260   
+0003           1261   end

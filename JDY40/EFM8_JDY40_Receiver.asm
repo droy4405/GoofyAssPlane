@@ -1,7 +1,7 @@
 ;--------------------------------------------------------
 ; File Created by C51
 ; Version 1.0.0 #1170 (Feb 16 2022) (MSVC)
-; This file was generated Thu Mar 14 19:48:32 2024
+; This file was generated Fri Mar 15 16:10:53 2024
 ;--------------------------------------------------------
 $name EFM8_JDY40_Receiver
 $optc51 --model-small
@@ -1097,7 +1097,10 @@ _SendATCommand:
 	mov	dph,r3
 	mov	b,r4
 	lcall	_sendstr1
-;	EFM8_JDY40_Receiver.c:224: P2_0=1; // 'set' pin to 1 is normal operation mode.
+;	EFM8_JDY40_Receiver.c:224: waitms(10);
+	mov	dptr,#0x000A
+	lcall	_waitms
+;	EFM8_JDY40_Receiver.c:225: P2_0=1; // 'set' pin to 1 is normal operation mode.
 	setb	_P2_0
 	ret
 ;------------------------------------------------------------
@@ -1107,15 +1110,15 @@ _SendATCommand:
 ;i                         Allocated with name '_main_i_1_94'
 ;s                         Allocated with name '_main_s_1_94'
 ;------------------------------------------------------------
-;	EFM8_JDY40_Receiver.c:227: void main (void)
+;	EFM8_JDY40_Receiver.c:228: void main (void)
 ;	-----------------------------------------
 ;	 function main
 ;	-----------------------------------------
 _main:
-;	EFM8_JDY40_Receiver.c:233: waitms(500);
+;	EFM8_JDY40_Receiver.c:234: waitms(500);
 	mov	dptr,#0x01F4
 	lcall	_waitms
-;	EFM8_JDY40_Receiver.c:234: printf("\r\nJDY-40 test\r\n");
+;	EFM8_JDY40_Receiver.c:235: printf("\r\nJDY-40 test\r\n");
 	mov	a,#__str_1
 	push	acc
 	mov	a,#(__str_1 >> 8)
@@ -1126,49 +1129,49 @@ _main:
 	dec	sp
 	dec	sp
 	dec	sp
-;	EFM8_JDY40_Receiver.c:235: UART1_Init(9600);
+;	EFM8_JDY40_Receiver.c:236: UART1_Init(9600);
 	mov	dptr,#0x2580
 	clr	a
 	mov	b,a
 	lcall	_UART1_Init
-;	EFM8_JDY40_Receiver.c:251: SendATCommand("AT+DVID0001\r\n");  
+;	EFM8_JDY40_Receiver.c:252: SendATCommand("AT+DVID2385\r\n");  
 	mov	dptr,#__str_2
 	mov	b,#0x80
 	lcall	_SendATCommand
-;	EFM8_JDY40_Receiver.c:254: SendATCommand("AT+VER\r\n");
+;	EFM8_JDY40_Receiver.c:255: SendATCommand("AT+VER\r\n");
 	mov	dptr,#__str_3
 	mov	b,#0x80
 	lcall	_SendATCommand
-;	EFM8_JDY40_Receiver.c:255: SendATCommand("AT+BAUD\r\n");
+;	EFM8_JDY40_Receiver.c:256: SendATCommand("AT+BAUD\r\n");
 	mov	dptr,#__str_4
 	mov	b,#0x80
 	lcall	_SendATCommand
-;	EFM8_JDY40_Receiver.c:256: SendATCommand("AT+RFID\r\n");
+;	EFM8_JDY40_Receiver.c:257: SendATCommand("AT+RFID\r\n");
 	mov	dptr,#__str_5
 	mov	b,#0x80
 	lcall	_SendATCommand
-;	EFM8_JDY40_Receiver.c:257: SendATCommand("AT+DVID\r\n");
+;	EFM8_JDY40_Receiver.c:258: SendATCommand("AT+DVID\r\n");
 	mov	dptr,#__str_6
 	mov	b,#0x80
 	lcall	_SendATCommand
-;	EFM8_JDY40_Receiver.c:258: SendATCommand("AT+RFC\r\n");
+;	EFM8_JDY40_Receiver.c:259: SendATCommand("AT+RFC\r\n");
 	mov	dptr,#__str_7
 	mov	b,#0x80
 	lcall	_SendATCommand
-;	EFM8_JDY40_Receiver.c:259: SendATCommand("AT+POWE\r\n");
+;	EFM8_JDY40_Receiver.c:260: SendATCommand("AT+POWE\r\n");
 	mov	dptr,#__str_8
 	mov	b,#0x80
 	lcall	_SendATCommand
-;	EFM8_JDY40_Receiver.c:260: SendATCommand("AT+CLSS\r\n");
+;	EFM8_JDY40_Receiver.c:261: SendATCommand("AT+CLSS\r\n");
 	mov	dptr,#__str_9
 	mov	b,#0x80
 	lcall	_SendATCommand
-;	EFM8_JDY40_Receiver.c:262: while(1)
+;	EFM8_JDY40_Receiver.c:263: while(1)
 L014004?:
-;	EFM8_JDY40_Receiver.c:264: if(RXU1())
+;	EFM8_JDY40_Receiver.c:265: if(RXU1())
 	lcall	_RXU1
 	jnc	L014002?
-;	EFM8_JDY40_Receiver.c:266: getstr1(buff);
+;	EFM8_JDY40_Receiver.c:267: getstr1(buff);
 	mov	dptr,#_buff
 	mov	b,#0x40
 	lcall	_getstr1
@@ -1210,7 +1213,7 @@ __str_1:
 	db 0x0A
 	db 0x00
 __str_2:
-	db 'AT+DVID0001'
+	db 'AT+DVID2385'
 	db 0x0D
 	db 0x0A
 	db 0x00
