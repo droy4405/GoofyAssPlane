@@ -221,6 +221,7 @@ void SendATCommand (char * s)
 	P2_0=0; // 'set' pin to 0 is 'AT' mode.
 	waitms(5);
 	sendstr1(s);
+	waitms(10);
 	P2_0=1; // 'set' pin to 1 is normal operation mode.
 }
 
@@ -248,7 +249,7 @@ void main (void)
 	
 	// We should select an unique device ID.  The device ID can be a hex
 	// number from 0x0000 to 0xFFFF.  In this case is set to 0xABBA
-	SendATCommand("AT+DVID0001\r\n");  
+	SendATCommand("AT+DVID2385\r\n");  
 
 	// To check configuration
 	SendATCommand("AT+VER\r\n");
@@ -264,7 +265,6 @@ void main (void)
 		if(RXU1())
 		{
 			getstr1(buff);
-
 			// for(i = 1; i < 5; i++){
 			// 	sAngle[i - 1] = s[i];
 			// }

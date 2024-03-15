@@ -152,7 +152,7 @@ void waitms (unsigned int ms)
 		for (k=0; k<4; k++) Timer3us(250);
 }
 
-#define VDD 3.3035 // The measured value of VDD in volts
+#define VDD 5.00 // The measured value of VDD in volts
 
 void InitPinADC (unsigned char portno, unsigned char pinno)
 {
@@ -329,10 +329,8 @@ void SendATCommand (char * s)
 	P2_0=0; // 'set' pin to 0 is 'AT' mode.
 	waitms(5);
 	sendstr1(s);
-	getstr1(buff);
 	waitms(10);
 	P2_0=1; // 'set' pin to 1 is normal operation mode.
-	printf("Response: %s\r\n", buff);
 }
 
 void main (void)
@@ -340,9 +338,13 @@ void main (void)
 	float X_pos_L;
 	char X_pos_L_string[5];
 	
+	// here is the initiallization code
 	waitms(500);
 	printf("\r\nJDY-40 test\r\n");
 	UART1_Init(9600);
+
+	InitPinADC(2, 1); // Configure P0.1 as analog input
+	InitPinADC(2, 2); // Configure P2.3 as analog input
 	InitADC();
 
 	// To configure the device (shown here using default values).
@@ -359,7 +361,7 @@ void main (void)
 	
 	// We should select an unique device ID.  The device ID can be a hex
 	// number from 0x0000 to 0xFFFF.  In this case is set to 0xABBA
-	SendATCommand("AT+DVID0001\r\n");  
+	SendATCommand("AT+DVID2385\r\n");  
 
 	// To check configuration
 	SendATCommand("AT+VER\r\n");
