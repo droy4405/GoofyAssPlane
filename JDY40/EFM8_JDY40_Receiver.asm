@@ -1,7 +1,7 @@
 ;--------------------------------------------------------
 ; File Created by C51
 ; Version 1.0.0 #1170 (Feb 16 2022) (MSVC)
-; This file was generated Fri Mar 15 16:10:53 2024
+; This file was generated Fri Mar 15 17:24:53 2024
 ;--------------------------------------------------------
 $name EFM8_JDY40_Receiver
 $optc51 --model-small
@@ -485,7 +485,9 @@ _TFRQ           BIT 0xdf
 ; internal ram data
 ;--------------------------------------------------------
 	rseg R_DSEG
-_main_sAngle_1_94:
+_main_sXAngle_1_94:
+	ds 4
+_main_sYAngle_1_94:
 	ds 4
 ;--------------------------------------------------------
 ; overlayable items in internal ram 
@@ -499,8 +501,6 @@ _main_sAngle_1_94:
 	rseg R_ISEG
 _buff:
 	ds 20
-_main_s_1_94:
-	ds 5
 ;--------------------------------------------------------
 ; absolute internal ram data
 ;--------------------------------------------------------
@@ -1106,19 +1106,22 @@ _SendATCommand:
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'main'
 ;------------------------------------------------------------
-;sAngle                    Allocated with name '_main_sAngle_1_94'
-;i                         Allocated with name '_main_i_1_94'
-;s                         Allocated with name '_main_s_1_94'
+;sXAngle                   Allocated with name '_main_sXAngle_1_94'
+;sYAngle                   Allocated with name '_main_sYAngle_1_94'
+;iXAngle                   Allocated to registers r2 r3 
+;iYAngle                   Allocated to registers r4 r5 
+;i                         Allocated to registers r2 r3 
+;j                         Allocated to registers r4 r5 
 ;------------------------------------------------------------
 ;	EFM8_JDY40_Receiver.c:228: void main (void)
 ;	-----------------------------------------
 ;	 function main
 ;	-----------------------------------------
 _main:
-;	EFM8_JDY40_Receiver.c:234: waitms(500);
+;	EFM8_JDY40_Receiver.c:237: waitms(500);
 	mov	dptr,#0x01F4
 	lcall	_waitms
-;	EFM8_JDY40_Receiver.c:235: printf("\r\nJDY-40 test\r\n");
+;	EFM8_JDY40_Receiver.c:238: printf("\r\nJDY-40 test\r\n");
 	mov	a,#__str_1
 	push	acc
 	mov	a,#(__str_1 >> 8)
@@ -1129,59 +1132,138 @@ _main:
 	dec	sp
 	dec	sp
 	dec	sp
-;	EFM8_JDY40_Receiver.c:236: UART1_Init(9600);
+;	EFM8_JDY40_Receiver.c:239: UART1_Init(9600);
 	mov	dptr,#0x2580
 	clr	a
 	mov	b,a
 	lcall	_UART1_Init
-;	EFM8_JDY40_Receiver.c:252: SendATCommand("AT+DVID2385\r\n");  
+;	EFM8_JDY40_Receiver.c:255: SendATCommand("AT+DVID2385\r\n");  
 	mov	dptr,#__str_2
 	mov	b,#0x80
 	lcall	_SendATCommand
-;	EFM8_JDY40_Receiver.c:255: SendATCommand("AT+VER\r\n");
+;	EFM8_JDY40_Receiver.c:258: SendATCommand("AT+VER\r\n");
 	mov	dptr,#__str_3
 	mov	b,#0x80
 	lcall	_SendATCommand
-;	EFM8_JDY40_Receiver.c:256: SendATCommand("AT+BAUD\r\n");
+;	EFM8_JDY40_Receiver.c:259: SendATCommand("AT+BAUD\r\n");
 	mov	dptr,#__str_4
 	mov	b,#0x80
 	lcall	_SendATCommand
-;	EFM8_JDY40_Receiver.c:257: SendATCommand("AT+RFID\r\n");
+;	EFM8_JDY40_Receiver.c:260: SendATCommand("AT+RFID\r\n");
 	mov	dptr,#__str_5
 	mov	b,#0x80
 	lcall	_SendATCommand
-;	EFM8_JDY40_Receiver.c:258: SendATCommand("AT+DVID\r\n");
+;	EFM8_JDY40_Receiver.c:261: SendATCommand("AT+DVID\r\n");
 	mov	dptr,#__str_6
 	mov	b,#0x80
 	lcall	_SendATCommand
-;	EFM8_JDY40_Receiver.c:259: SendATCommand("AT+RFC\r\n");
+;	EFM8_JDY40_Receiver.c:262: SendATCommand("AT+RFC\r\n");
 	mov	dptr,#__str_7
 	mov	b,#0x80
 	lcall	_SendATCommand
-;	EFM8_JDY40_Receiver.c:260: SendATCommand("AT+POWE\r\n");
+;	EFM8_JDY40_Receiver.c:263: SendATCommand("AT+POWE\r\n");
 	mov	dptr,#__str_8
 	mov	b,#0x80
 	lcall	_SendATCommand
-;	EFM8_JDY40_Receiver.c:261: SendATCommand("AT+CLSS\r\n");
+;	EFM8_JDY40_Receiver.c:264: SendATCommand("AT+CLSS\r\n");
 	mov	dptr,#__str_9
 	mov	b,#0x80
 	lcall	_SendATCommand
-;	EFM8_JDY40_Receiver.c:263: while(1)
+;	EFM8_JDY40_Receiver.c:266: while(1)
 L014004?:
-;	EFM8_JDY40_Receiver.c:265: if(RXU1())
+;	EFM8_JDY40_Receiver.c:268: if(RXU1())
 	lcall	_RXU1
-	jnc	L014002?
-;	EFM8_JDY40_Receiver.c:267: getstr1(buff);
+	jc	L014024?
+	ljmp	L014002?
+L014024?:
+;	EFM8_JDY40_Receiver.c:270: getstr1(buff);
 	mov	dptr,#_buff
 	mov	b,#0x40
 	lcall	_getstr1
-;	EFM8_JDY40_Receiver.c:274: printf("%s",buff);
-	mov	a,#_buff
-	push	acc
-	mov	a,#(_buff >> 8)
-	push	acc
-	mov	a,#0x40
-	push	acc
+;	EFM8_JDY40_Receiver.c:271: for(i = 1; i < 5; i++){
+	mov	r2,#0x01
+	mov	r3,#0x00
+	mov	r4,#0x01
+	mov	r5,#0x00
+L014006?:
+	clr	c
+	mov	a,r4
+	subb	a,#0x05
+	mov	a,r5
+	xrl	a,#0x80
+	subb	a,#0x80
+	jnc	L014022?
+;	EFM8_JDY40_Receiver.c:272: sXAngle[i - 1] = buff[i];
+	mov	ar6,r4
+	mov	a,r6
+	dec	a
+	add	a,#_main_sXAngle_1_94
+	mov	r0,a
+	mov	a,r4
+	add	a,#_buff
+	mov	r1,a
+	mov	ar6,@r1
+	mov	@r0,ar6
+;	EFM8_JDY40_Receiver.c:271: for(i = 1; i < 5; i++){
+	inc	r4
+	cjne	r4,#0x00,L014026?
+	inc	r5
+L014026?:
+	mov	ar2,r4
+	mov	ar3,r5
+	sjmp	L014006?
+L014022?:
+	mov	ar2,r4
+	mov	ar3,r5
+;	EFM8_JDY40_Receiver.c:274: for(j = 5; j < 9; j++){
+	mov	r4,#0x05
+	mov	r5,#0x00
+L014010?:
+	clr	c
+	mov	a,r4
+	subb	a,#0x09
+	mov	a,r5
+	xrl	a,#0x80
+	subb	a,#0x80
+	jnc	L014013?
+;	EFM8_JDY40_Receiver.c:275: sYAngle[i - 1] = buff[j];
+	mov	ar6,r2
+	mov	a,r6
+	dec	a
+	add	a,#_main_sYAngle_1_94
+	mov	r0,a
+	mov	a,r4
+	add	a,#_buff
+	mov	r1,a
+	mov	ar6,@r1
+	mov	@r0,ar6
+;	EFM8_JDY40_Receiver.c:274: for(j = 5; j < 9; j++){
+	inc	r4
+	cjne	r4,#0x00,L014010?
+	inc	r5
+	sjmp	L014010?
+L014013?:
+;	EFM8_JDY40_Receiver.c:278: iXAngle = atoi(sXAngle);
+	mov	dptr,#_main_sXAngle_1_94
+	mov	b,#0x40
+	lcall	_atoi
+	mov	r2,dpl
+	mov	r3,dph
+;	EFM8_JDY40_Receiver.c:279: iYAngle = atoi(sYAngle);
+	mov	dptr,#_main_sYAngle_1_94
+	mov	b,#0x40
+	push	ar2
+	push	ar3
+	lcall	_atoi
+	mov	r4,dpl
+	mov	r5,dph
+	pop	ar3
+	pop	ar2
+;	EFM8_JDY40_Receiver.c:281: printf("RX: %d\r\n", iXAngle);
+	push	ar4
+	push	ar5
+	push	ar2
+	push	ar3
 	mov	a,#__str_10
 	push	acc
 	mov	a,#(__str_10 >> 8)
@@ -1190,13 +1272,24 @@ L014004?:
 	push	acc
 	lcall	_printf
 	mov	a,sp
-	add	a,#0xfa
+	add	a,#0xfb
+	mov	sp,a
+;	EFM8_JDY40_Receiver.c:283: printf("LX: %d\r\n", iYAngle);
+	mov	a,#__str_11
+	push	acc
+	mov	a,#(__str_11 >> 8)
+	push	acc
+	mov	a,#0x80
+	push	acc
+	lcall	_printf
+	mov	a,sp
+	add	a,#0xfb
 	mov	sp,a
 L014002?:
-;	EFM8_JDY40_Receiver.c:277: waitms_or_RI1(100);
+;	EFM8_JDY40_Receiver.c:285: waitms_or_RI1(100);
 	mov	dptr,#0x0064
 	lcall	_waitms_or_RI1
-	sjmp	L014004?
+	ljmp	L014004?
 	rseg R_CSEG
 
 	rseg R_XINIT
@@ -1253,7 +1346,14 @@ __str_9:
 	db 0x0A
 	db 0x00
 __str_10:
-	db '%s'
+	db 'RX: %d'
+	db 0x0D
+	db 0x0A
+	db 0x00
+__str_11:
+	db 'LX: %d'
+	db 0x0D
+	db 0x0A
 	db 0x00
 
 	CSEG

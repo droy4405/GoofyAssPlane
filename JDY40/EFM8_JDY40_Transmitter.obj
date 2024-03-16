@@ -19,13 +19,13 @@ R_CONST,code,0077,NO
 rbank0,data,0000,OV
 R_PSEG,xdata,0000,NO
 R_DINIT,code,0000,NO
-R_DSEG,data,0005,NO
+R_DSEG,data,0009,NO
 R_OSEG,data,0001,OV
 R_IXSEG,xdata,0000,NO
 R_ISEG,idata,0014,NO
 R_HOME,code,0000,NO
 R_XINIT,code,0000,NO
-R_CSEG,code,0430,NO
+R_CSEG,code,0455,NO
 </SEGMENTS>
 
 <LOCALS>
@@ -72,11 +72,12 @@ __str_7,R_CONST,0051,0000
 __str_8,R_CONST,005A,0000
 __str_9,R_CONST,0064,0000
 L008001?,R_CSEG,0123,0000
+_main_X_pos_L_1_108,R_DSEG,0000,0004
 L009001?,R_CSEG,0134,0000
 L016012?,R_CSEG,0273,0000
 L013008?,R_CSEG,020D,0000
 L013001?,R_CSEG,0208,0000
-_main_X_pos_L_string_1_108,R_DSEG,0000,0005
+_main_X_pos_L_string_1_108,R_DSEG,0004,0005
 L014004?,R_CSEG,023D,0000
 L014001?,R_CSEG,0219,0000
 </LOCALS>
@@ -615,14 +616,30 @@ F5 F0
 12 addr16(_SendATCommand;)  
 75 82 0E
 12 addr16(_Volts_at_Pin;)  
-AA 82
-AB 83
-AC F0
-FD
+85 82 data8(_main_X_pos_L_1_108;)
+85 83 data8(_main_X_pos_L_1_108;0x0001;+;)
+85 F0 data8(_main_X_pos_L_1_108;0x0002;+;)
+F5 data8(_main_X_pos_L_1_108;0x0003;+;)
+75 82 0A
+12 addr16(_Volts_at_Pin;)  
+AE 82
+AF 83
+AA F0
+FB
+C0 06
+C0 07
 C0 02
 C0 03
-C0 04
-C0 05
+74 data8(__str_10;)
+C0 E0
+74 data8(__str_10;0x0008;>>;)
+C0 E0
+74 80
+C0 E0
+C0 data8(_main_X_pos_L_1_108;)
+C0 data8(_main_X_pos_L_1_108;0x0001;+;)
+C0 data8(_main_X_pos_L_1_108;0x0002;+;)
+C0 data8(_main_X_pos_L_1_108;0x0003;+;)
 74 data8(__str_10;)
 C0 E0
 74 data8(__str_10;0x0008;>>;)
@@ -637,7 +654,7 @@ C0 E0
 C0 E0
 12 addr16(_sprintf;)  
 E5 81
-24 F6
+24 EF
 F5 81
 90 data16(_buff;)  
 75 F0 40
@@ -694,7 +711,7 @@ F5 81
 0D
 0A
 00
-4C 25 33 2E 35 66 
+4C 25 30 2E 34 66 
 0D
 0A
 00

@@ -227,9 +227,12 @@ void SendATCommand (char * s)
 
 void main (void)
 {
-	idata char s[5];
-	char sAngle[4];
+	char sXAngle[4];
+	char sYAngle[4];
+	int iXAngle;
+	int iYAngle;
 	int i;
+	int j;
 	
 	waitms(500);
 	printf("\r\nJDY-40 test\r\n");
@@ -265,14 +268,19 @@ void main (void)
 		if(RXU1())
 		{
 			getstr1(buff);
-			// for(i = 1; i < 5; i++){
-			// 	sAngle[i - 1] = s[i];
-			// }
+			for(i = 1; i < 5; i++){
+				sXAngle[i - 1] = buff[i];
+			}
+			for(j = 5; j < 9; j++){
+				sYAngle[i - 1] = buff[j];
+			}
 
-			// printf("RX: %s\r\n", sAngle);
+			iXAngle = atoi(sXAngle);
+			iYAngle = atoi(sYAngle);
 
-			printf("%s",buff);
-			
+			printf("RX: %d\r\n", iXAngle);
+
+			printf("LX: %d\r\n", iYAngle);
 		}
 		waitms_or_RI1(100);
 	}
