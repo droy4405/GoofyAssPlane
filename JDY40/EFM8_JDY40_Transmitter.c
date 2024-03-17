@@ -336,7 +336,7 @@ void SendATCommand (char * s)
 void main (void)
 {
 	float X_pos_L;
-	float Y_pos_L;
+	float Y_pos_R;
 	char X_pos_L_string[5];
 	int count = 0;
 	
@@ -381,9 +381,9 @@ void main (void)
 		// on pin 2.1
 
 		X_pos_L = Volts_at_Pin(QFP32_MUX_P2_1);
-		Y_pos_L = Volts_at_Pin(QFP32_MUX_P1_4);
+		Y_pos_R = Volts_at_Pin(QFP32_MUX_P1_2);
 		
-		sprintf(buff, "L%0.4f\r\n", X_pos_L, "L%0.4f\r\n", Y_pos_L);
+		sprintf(buff, "%0.4f %0.4f\r\n", X_pos_L, Y_pos_R);
 
 		//sprintf(buff, "test %d\n",count++);
 		sendstr1(buff);

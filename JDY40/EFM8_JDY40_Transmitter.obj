@@ -15,7 +15,7 @@ R_GSINIT,code,0000,NO
 R_BSEG,bit,0000,NO
 R_XSEG,xdata,0000,NO
 BIT_BANK,data,0000,OV
-R_CONST,code,0077,NO
+R_CONST,code,007C,NO
 rbank0,data,0000,OV
 R_PSEG,xdata,0000,NO
 R_DINIT,code,0000,NO
@@ -25,7 +25,7 @@ R_IXSEG,xdata,0000,NO
 R_ISEG,idata,0014,NO
 R_HOME,code,0000,NO
 R_XINIT,code,0000,NO
-R_CSEG,code,0455,NO
+R_CSEG,code,0449,NO
 </SEGMENTS>
 
 <LOCALS>
@@ -620,7 +620,7 @@ F5 F0
 85 83 data8(_main_X_pos_L_1_108;0x0001;+;)
 85 F0 data8(_main_X_pos_L_1_108;0x0002;+;)
 F5 data8(_main_X_pos_L_1_108;0x0003;+;)
-75 82 0A
+75 82 08
 12 addr16(_Volts_at_Pin;)  
 AE 82
 AF 83
@@ -630,12 +630,6 @@ C0 06
 C0 07
 C0 02
 C0 03
-74 data8(__str_10;)
-C0 E0
-74 data8(__str_10;0x0008;>>;)
-C0 E0
-74 80
-C0 E0
 C0 data8(_main_X_pos_L_1_108;)
 C0 data8(_main_X_pos_L_1_108;0x0001;+;)
 C0 data8(_main_X_pos_L_1_108;0x0002;+;)
@@ -654,7 +648,7 @@ C0 E0
 C0 E0
 12 addr16(_sprintf;)  
 E5 81
-24 EF
+24 F2
 F5 81
 90 data16(_buff;)  
 75 F0 40
@@ -711,7 +705,7 @@ F5 81
 0D
 0A
 00
-4C 25 30 2E 34 66 
+25 30 2E 34 66 20 25 30 2E 34 66 
 0D
 0A
 00

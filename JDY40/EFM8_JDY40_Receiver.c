@@ -229,8 +229,8 @@ void main (void)
 {
 	char sXAngle[4];
 	char sYAngle[4];
-	int iXAngle;
-	int iYAngle;
+	float iXAngle;
+	float iYAngle;
 	int i;
 	int j;
 	
@@ -268,19 +268,19 @@ void main (void)
 		if(RXU1())
 		{
 			getstr1(buff);
-			for(i = 1; i < 5; i++){
-				sXAngle[i - 1] = buff[i];
+			
+			for(i = 0; i < 5; i++){
+				sXAngle[i] = buff[i];
 			}
-			for(j = 5; j < 9; j++){
-				sYAngle[i - 1] = buff[j];
+			for(j = 7; j < 11; j++){
+				sYAngle[j-7] = buff[j];
 			}
 
-			iXAngle = atoi(sXAngle);
-			iYAngle = atoi(sYAngle);
+			iXAngle = atof(sXAngle);
+			iYAngle = atof(sYAngle);
 
-			printf("RX: %d\r\n", iXAngle);
+			printf("LX: %0.4f, RY: %0.4f\n", iXAngle, iYAngle);
 
-			printf("LX: %d\r\n", iYAngle);
 		}
 		waitms_or_RI1(100);
 	}
