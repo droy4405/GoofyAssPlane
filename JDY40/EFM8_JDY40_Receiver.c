@@ -7,6 +7,12 @@
 #define BAUDRATE 115200L
 
 idata char buff[20];
+volatile unsigned int pwm_reload;
+volatile unsigned char pwm_state = 0;
+volatile unsigned char count20ms;
+#define ESCOUT P1_7
+
+#define RELOAD_10MS (0x10000L-(SYSCLK/(12L*100L)))
 
 char _c51_external_startup (void)
 {
@@ -73,8 +79,55 @@ char _c51_external_startup (void)
 	TMOD |=  0x20;                       
 	TR1 = 1; // START Timer1
 	TI = 1;  // Indicate TX0 ready
-  	
+
+  	// Initialize timer 5 for periodic interrupts
+	SFRPAGE=0x10;
+	TMR5CN0=0x00;
+	pwm_reload=0x10000L-(SYSCLK*1.5e-3)/12.0; // 1.5 miliseconds pulse is the center of the servo
+	TMR5=0xffff;   // Set to reload immediately
+	EIE2|=0b_0000_1000; // Enable Timer5 interrupts
+	TR5=1;         // Start Timer5 (TMR5CN0 is bit addressable)
+	
+	EA=1;
+	
+	SFRPAGE=0x00;
+
 	return 0;
+}
+
+// using timer 5 to control ESC
+void Timer5_ISR (void) interrupt INTERRUPT_TIMER5
+{
+	SFRPAGE=0x10;
+	TF5H = 0; // Clear Timer5 interrupt flag
+	// Since the maximum time we can achieve with this timer in the
+	// configuration above is about 10ms, implement a simple state
+	// machine to produce the required 20ms period.
+	switch (pwm_state)
+	{
+		// case 10:
+		// 	//in this case the PWM is turned off
+		// 	ESCOUT = 0;
+			
+		case 0:
+			ESCOUT=1;
+			TMR5RL=RELOAD_10MS;
+			pwm_state=1;
+			count20ms++;
+		break;
+
+		case 1:
+			ESCOUT=0;
+			TMR5RL=RELOAD_10MS-pwm_reload;
+			pwm_state=2;
+		break;
+
+		default:
+			ESCOUT=0;
+			TMR5RL=pwm_reload;
+			pwm_state=0;
+		break;
+	}
 }
 
 // Uses Timer3 to delay <us> micro-seconds. 
@@ -229,11 +282,17 @@ void main (void)
 {
 	char sXAngle[4];
 	char sYAngle[4];
-	float iXAngle;
-	float iYAngle;
+	float iXAngle = 0;
+	float iYAngle = 0;
 	int i;
 	int j;
-	
+
+	float pulse_width;
+
+	// this variable is only for testing purposes
+	int motor_on = 0;
+
+	count20ms=0; // Count20ms is an atomic variable, so no problem sharing with timer 5 ISR
 	waitms(500);
 	printf("\r\nJDY-40 test\r\n");
 	UART1_Init(9600);
@@ -265,6 +324,19 @@ void main (void)
 
 	while(1)
 	{
+
+		// // determing if the motor needs to be turned on
+		// if(motor_on){
+		// 	//pwm_state = 0;
+		// 	pwm_reload=0x10000L-(SYSCLK*1*1.0e-3)/12.0;
+		// }else if(!motor_on){
+		// 	//pwm_state = 10;
+		// 	//ESCOUT = 0;
+		// 	pwm_reload = RELOAD_10MS;
+		// }
+
+		pwm_reload=0x10000L-(SYSCLK*1.5*1.0e-3)/12.0;
+		
 		if(RXU1())
 		{
 			getstr1(buff);
@@ -279,9 +351,21 @@ void main (void)
 			iXAngle = atof(sXAngle);
 			iYAngle = atof(sYAngle);
 
-			printf("LX: %0.4f, RY: %0.4f\n", iXAngle, iYAngle);
-
 		}
+
+		// determining if the BLDC needs to be turned on
+		// for testing purposes, the motor will alsways run on min rpm
+		// with a pulse width on 1ms
+
+		// this following code is for testing, if the 
+		if(P3_7 == 0 && !motor_on){
+			motor_on = 1;
+		}else if(P3_7 == 0 && motor_on){
+			motor_on = 0;
+		}
+
+		printf("LX: %0.4f, RY: %0.4f\n, Motor State: %d", iXAngle, iYAngle, motor_on);
+
 		waitms_or_RI1(100);
 	}
 }
