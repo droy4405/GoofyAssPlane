@@ -200,7 +200,7 @@ unsigned int ADC_at_Pin(unsigned char pin)
 
 float Volts_at_Pin(unsigned char pin)
 {
-	 return ((ADC_at_Pin(pin)*VDD)/0b_0011_1111_1111_1111);
+	 return ((ADC_at_Pin(pin)*VDD)/16383.0);
 }
 
 // measure voltage of reference signal
@@ -346,7 +346,7 @@ void main (void)
 	UART1_Init(9600);
 
 	InitPinADC(2, 1); // Configure P0.1 as analog input
-	InitPinADC(2, 2); // Configure P2.3 as analog input
+	InitPinADC(1, 2); // Configure P2.3 as analog input
 	InitADC();
 
 	// To configure the device (shown here using default values).

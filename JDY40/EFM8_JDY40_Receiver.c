@@ -113,7 +113,7 @@ void Timer5_ISR (void) interrupt INTERRUPT_TIMER5
 			ESCOUT=1;
 			TMR5RL=RELOAD_10MS;
 			pwm_state=1;
-			count20ms++;
+			000000000000000000++;
 		break;
 
 		case 1:
@@ -124,7 +124,7 @@ void Timer5_ISR (void) interrupt INTERRUPT_TIMER5
 
 		default:
 			ESCOUT=0;
-			TMR5RL=pwm_reload;
+			TMR5RL=pwm_ reload;
 			pwm_state=0;
 		break;
 	}
