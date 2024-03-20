@@ -339,6 +339,10 @@ void main (void)
 	float Y_pos_R;
 	char X_pos_L_string[5];
 	int count = 0;
+
+	// this important variable is used to change the PWM duty
+	// cycle in charge of controlling the motor throttle
+	float PWM_DutyCyclePeriod = 1; // initiallized to be 1ms for 0% throttle
 	
 	// here is the initiallization code
 	waitms(500);

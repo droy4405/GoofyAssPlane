@@ -287,7 +287,7 @@ void main (void)
 	int i;
 	int j;
 
-	float pulse_width;
+	float motor_PWM_DutyCycleWidth = 1;
 
 	// this variable is only for testing purposes
 	int motor_on = 0;
@@ -325,18 +325,19 @@ void main (void)
 	while(1)
 	{
 
-		// // determing if the motor needs to be turned on
-		// if(motor_on){
-		// 	//pwm_state = 0;
-		// 	pwm_reload=0x10000L-(SYSCLK*1*1.0e-3)/12.0;
-		// }else if(!motor_on){
-		// 	//pwm_state = 10;
-		// 	//ESCOUT = 0;
-		// 	pwm_reload = RELOAD_10MS;
-		// }
+		// determing if the motor needs to be turned on
+		if(motor_on){
+			// if motor needs to be turned on change the duty cycle to 1.3ms
+			motor_PWM_DutyCycleWidth = 1.3;
+			
+		}else if(!motor_on){
+			// otherwise writing 1ms to PWM pulse width for 0% throttle
+			motor_PWM_DutyCycleWidth = 1;
+		}
 
-		pwm_reload=0x10000L-(SYSCLK*1.5*1.0e-3)/12.0;
-		
+		// writing to the motor throttle
+		pwm_reload=0x10000L-(SYSCLK*motor_PWM_DutyCycleWidth*1.0e-3)/12.0;
+
 		if(RXU1())
 		{
 			getstr1(buff);
