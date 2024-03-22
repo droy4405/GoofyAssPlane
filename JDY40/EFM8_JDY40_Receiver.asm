@@ -1,7 +1,7 @@
 ;--------------------------------------------------------
 ; File Created by C51
 ; Version 1.0.0 #1170 (Feb 16 2022) (MSVC)
-; This file was generated Sun Mar 17 17:45:53 2024
+; This file was generated Fri Mar 22 15:22:19 2024
 ;--------------------------------------------------------
 $name EFM8_JDY40_Receiver
 $optc51 --model-small
@@ -500,13 +500,11 @@ _main_sXAngle_1_97:
 	ds 4
 _main_sYAngle_1_97:
 	ds 4
-_main_i_1_97:
-	ds 2
-_main_j_1_97:
-	ds 2
-_main_motor_on_1_97:
-	ds 2
+_main_motor_PWM_DutyCycleWidth_1_97:
+	ds 4
 _main_sloc0_1_0:
+	ds 4
+_main_sloc1_1_0:
 	ds 4
 ;--------------------------------------------------------
 ; overlayable items in internal ram 
@@ -1239,13 +1237,14 @@ _SendATCommand:
 ;------------------------------------------------------------
 ;sXAngle                   Allocated with name '_main_sXAngle_1_97'
 ;sYAngle                   Allocated with name '_main_sYAngle_1_97'
-;iXAngle                   Allocated to registers r2 r3 r4 r5 
+;iXAngle                   Allocated with name '_main_sloc1_1_0'
 ;iYAngle                   Allocated with name '_main_sloc0_1_0'
-;i                         Allocated with name '_main_i_1_97'
-;j                         Allocated with name '_main_j_1_97'
-;pulse_width               Allocated with name '_main_pulse_width_1_97'
-;motor_on                  Allocated with name '_main_motor_on_1_97'
+;i                         Allocated to registers r2 r3 
+;j                         Allocated to registers r2 r3 
+;motor_PWM_DutyCycleWidth  Allocated with name '_main_motor_PWM_DutyCycleWidth_1_97'
+;motor_on                  Allocated to registers r4 r5 
 ;sloc0                     Allocated with name '_main_sloc0_1_0'
+;sloc1                     Allocated with name '_main_sloc1_1_0'
 ;------------------------------------------------------------
 ;	EFM8_JDY40_Receiver.c:281: void main (void)
 ;	-----------------------------------------
@@ -1253,25 +1252,27 @@ _SendATCommand:
 ;	-----------------------------------------
 _main:
 ;	EFM8_JDY40_Receiver.c:285: float iXAngle = 0;
-	mov	r2,#0x00
-	mov	r3,#0x00
-	mov	r4,#0x00
+	mov	_main_sloc1_1_0,#0x00
+	mov	(_main_sloc1_1_0 + 1),#0x00
+	mov	(_main_sloc1_1_0 + 2),#0x00
+	mov	(_main_sloc1_1_0 + 3),#0x00
 ;	EFM8_JDY40_Receiver.c:286: float iYAngle = 0;
+	mov	_main_sloc0_1_0,#0x00
+	mov	(_main_sloc0_1_0 + 1),#0x00
+	mov	(_main_sloc0_1_0 + 2),#0x00
+	mov	(_main_sloc0_1_0 + 3),#0x00
+;	EFM8_JDY40_Receiver.c:290: float motor_PWM_DutyCycleWidth = 1;
+	mov	_main_motor_PWM_DutyCycleWidth_1_97,#0x00
+	mov	(_main_motor_PWM_DutyCycleWidth_1_97 + 1),#0x00
+	mov	(_main_motor_PWM_DutyCycleWidth_1_97 + 2),#0x80
+	mov	(_main_motor_PWM_DutyCycleWidth_1_97 + 3),#0x3F
 ;	EFM8_JDY40_Receiver.c:293: int motor_on = 0;
+	mov	r4,#0x00
+	mov	r5,#0x00
 ;	EFM8_JDY40_Receiver.c:295: count20ms=0; // Count20ms is an atomic variable, so no problem sharing with timer 5 ISR
-	clr	a
-	mov	r5,a
-	mov	_main_sloc0_1_0,a
-	mov	(_main_sloc0_1_0 + 1),a
-	mov	(_main_sloc0_1_0 + 2),a
-	mov	(_main_sloc0_1_0 + 3),a
-	mov	_main_motor_on_1_97,a
-	mov	(_main_motor_on_1_97 + 1),a
-	mov	_count20ms,a
+	mov	_count20ms,#0x00
 ;	EFM8_JDY40_Receiver.c:296: waitms(500);
 	mov	dptr,#0x01F4
-	push	ar2
-	push	ar3
 	push	ar4
 	push	ar5
 	lcall	_waitms
@@ -1325,104 +1326,170 @@ _main:
 	lcall	_SendATCommand
 	pop	ar5
 	pop	ar4
-	pop	ar3
-	pop	ar2
 ;	EFM8_JDY40_Receiver.c:325: while(1)
-L015011?:
-;	EFM8_JDY40_Receiver.c:338: pwm_reload=0x10000L-(SYSCLK*1.5*1.0e-3)/12.0;
-	mov	_pwm_reload,#0xD8
-	mov	(_pwm_reload + 1),#0xDC
-;	EFM8_JDY40_Receiver.c:340: if(RXU1())
-	push	ar2
-	push	ar3
+L015016?:
+;	EFM8_JDY40_Receiver.c:329: if(motor_on){
+	mov	a,r4
+	orl	a,r5
+	jz	L015004?
+;	EFM8_JDY40_Receiver.c:331: motor_PWM_DutyCycleWidth = 1.3;
+	mov	_main_motor_PWM_DutyCycleWidth_1_97,#0x66
+	mov	(_main_motor_PWM_DutyCycleWidth_1_97 + 1),#0x66
+	mov	(_main_motor_PWM_DutyCycleWidth_1_97 + 2),#0xA6
+	mov	(_main_motor_PWM_DutyCycleWidth_1_97 + 3),#0x3F
+	sjmp	L015005?
+L015004?:
+;	EFM8_JDY40_Receiver.c:333: }else if(!motor_on){
+	mov	a,r4
+	orl	a,r5
+;	EFM8_JDY40_Receiver.c:335: motor_PWM_DutyCycleWidth = 1;
+	jnz	L015005?
+	mov	_main_motor_PWM_DutyCycleWidth_1_97,a
+	mov	(_main_motor_PWM_DutyCycleWidth_1_97 + 1),a
+	mov	(_main_motor_PWM_DutyCycleWidth_1_97 + 2),#0x80
+	mov	(_main_motor_PWM_DutyCycleWidth_1_97 + 3),#0x3F
+L015005?:
+;	EFM8_JDY40_Receiver.c:339: pwm_reload=0x10000L-(SYSCLK*motor_PWM_DutyCycleWidth*1.0e-3)/12.0;
 	push	ar4
 	push	ar5
-	lcall	_RXU1
+	push	_main_motor_PWM_DutyCycleWidth_1_97
+	push	(_main_motor_PWM_DutyCycleWidth_1_97 + 1)
+	push	(_main_motor_PWM_DutyCycleWidth_1_97 + 2)
+	push	(_main_motor_PWM_DutyCycleWidth_1_97 + 3)
+	mov	dptr,#0xA000
+	mov	b,#0x8C
+	mov	a,#0x47
+	lcall	___fsmul
+	mov	r2,dpl
+	mov	r3,dph
+	mov	r6,b
+	mov	r7,a
+	mov	a,sp
+	add	a,#0xfc
+	mov	sp,a
 	clr	a
-	rlc	a
+	push	acc
+	push	acc
+	mov	a,#0x40
+	push	acc
+	mov	a,#0x41
+	push	acc
+	mov	dpl,r2
+	mov	dph,r3
+	mov	b,r6
+	mov	a,r7
+	lcall	___fsdiv
+	mov	r2,dpl
+	mov	r3,dph
+	mov	r6,b
+	mov	r7,a
+	mov	a,sp
+	add	a,#0xfc
+	mov	sp,a
+	push	ar2
+	push	ar3
+	push	ar6
+	push	ar7
+	mov	dptr,#0x0000
+	mov	b,#0x80
+	mov	a,#0x47
+	lcall	___fssub
+	mov	r2,dpl
+	mov	r3,dph
+	mov	r6,b
+	mov	r7,a
+	mov	a,sp
+	add	a,#0xfc
+	mov	sp,a
+	mov	dpl,r2
+	mov	dph,r3
+	mov	b,r6
+	mov	a,r7
+	lcall	___fs2uint
+	mov	_pwm_reload,dpl
+	mov	(_pwm_reload + 1),dph
+;	EFM8_JDY40_Receiver.c:341: if(RXU1())
+	lcall	_RXU1
 	pop	ar5
 	pop	ar4
-	pop	ar3
-	pop	ar2
-	jnz	L015035?
-	ljmp	L015002?
-L015035?:
-;	EFM8_JDY40_Receiver.c:342: getstr1(buff);
+	jc	L015044?
+	ljmp	L015007?
+L015044?:
+;	EFM8_JDY40_Receiver.c:343: getstr1(buff);
 	mov	dptr,#_buff
 	mov	b,#0x40
+	push	ar4
+	push	ar5
 	lcall	_getstr1
-;	EFM8_JDY40_Receiver.c:344: for(i = 0; i < 5; i++){
-	clr	a
-	mov	_main_i_1_97,a
-	mov	(_main_i_1_97 + 1),a
-L015013?:
+	pop	ar5
+	pop	ar4
+;	EFM8_JDY40_Receiver.c:345: for(i = 0; i < 5; i++){
+	mov	r2,#0x00
+	mov	r3,#0x00
+L015018?:
 	clr	c
-	mov	a,_main_i_1_97
+	mov	a,r2
 	subb	a,#0x05
-	mov	a,(_main_i_1_97 + 1)
+	mov	a,r3
 	xrl	a,#0x80
 	subb	a,#0x80
-	jnc	L015016?
-;	EFM8_JDY40_Receiver.c:345: sXAngle[i] = buff[i];
-	mov	a,_main_i_1_97
+	jnc	L015021?
+;	EFM8_JDY40_Receiver.c:346: sXAngle[i] = buff[i];
+	mov	a,r2
 	add	a,#_main_sXAngle_1_97
 	mov	r0,a
-	mov	a,_main_i_1_97
+	mov	a,r2
 	add	a,#_buff
 	mov	r1,a
 	mov	ar6,@r1
 	mov	@r0,ar6
-;	EFM8_JDY40_Receiver.c:344: for(i = 0; i < 5; i++){
-	inc	_main_i_1_97
-	clr	a
-	cjne	a,_main_i_1_97,L015013?
-	inc	(_main_i_1_97 + 1)
-	sjmp	L015013?
-L015016?:
-;	EFM8_JDY40_Receiver.c:347: for(j = 7; j < 11; j++){
-	mov	_main_j_1_97,#0x07
-	clr	a
-	mov	(_main_j_1_97 + 1),a
-L015017?:
+;	EFM8_JDY40_Receiver.c:345: for(i = 0; i < 5; i++){
+	inc	r2
+	cjne	r2,#0x00,L015018?
+	inc	r3
+	sjmp	L015018?
+L015021?:
+;	EFM8_JDY40_Receiver.c:348: for(j = 7; j < 11; j++){
+	mov	r2,#0x07
+	mov	r3,#0x00
+L015022?:
 	clr	c
-	mov	a,_main_j_1_97
+	mov	a,r2
 	subb	a,#0x0B
-	mov	a,(_main_j_1_97 + 1)
+	mov	a,r3
 	xrl	a,#0x80
 	subb	a,#0x80
-	jnc	L015020?
-;	EFM8_JDY40_Receiver.c:348: sYAngle[j-7] = buff[j];
-	mov	a,_main_j_1_97
+	jnc	L015025?
+;	EFM8_JDY40_Receiver.c:349: sYAngle[j-7] = buff[j];
+	mov	ar6,r2
+	mov	a,r6
 	add	a,#0xf9
 	add	a,#_main_sYAngle_1_97
 	mov	r0,a
-	mov	a,_main_j_1_97
+	mov	a,r2
 	add	a,#_buff
 	mov	r1,a
 	mov	ar6,@r1
 	mov	@r0,ar6
-;	EFM8_JDY40_Receiver.c:347: for(j = 7; j < 11; j++){
-	inc	_main_j_1_97
-	clr	a
-	cjne	a,_main_j_1_97,L015017?
-	inc	(_main_j_1_97 + 1)
-	sjmp	L015017?
-L015020?:
-;	EFM8_JDY40_Receiver.c:351: iXAngle = atof(sXAngle);
+;	EFM8_JDY40_Receiver.c:348: for(j = 7; j < 11; j++){
+	inc	r2
+	cjne	r2,#0x00,L015022?
+	inc	r3
+	sjmp	L015022?
+L015025?:
+;	EFM8_JDY40_Receiver.c:352: iXAngle = atof(sXAngle);
 	mov	dptr,#_main_sXAngle_1_97
 	mov	b,#0x40
-	lcall	_atof
-	mov	r2,dpl
-	mov	r3,dph
-	mov	r4,b
-	mov	r5,a
-;	EFM8_JDY40_Receiver.c:352: iYAngle = atof(sYAngle);
-	mov	dptr,#_main_sYAngle_1_97
-	mov	b,#0x40
-	push	ar2
-	push	ar3
 	push	ar4
 	push	ar5
+	lcall	_atof
+	mov	_main_sloc1_1_0,dpl
+	mov	(_main_sloc1_1_0 + 1),dph
+	mov	(_main_sloc1_1_0 + 2),b
+	mov	(_main_sloc1_1_0 + 3),a
+;	EFM8_JDY40_Receiver.c:353: iYAngle = atof(sYAngle);
+	mov	dptr,#_main_sYAngle_1_97
+	mov	b,#0x40
 	lcall	_atof
 	mov	_main_sloc0_1_0,dpl
 	mov	(_main_sloc0_1_0 + 1),dph
@@ -1430,45 +1497,39 @@ L015020?:
 	mov	(_main_sloc0_1_0 + 3),a
 	pop	ar5
 	pop	ar4
-	pop	ar3
-	pop	ar2
-L015002?:
-;	EFM8_JDY40_Receiver.c:361: if(P3_7 == 0 && !motor_on){
-	jb	_P3_7,L015007?
-	mov	a,_main_motor_on_1_97
-	orl	a,(_main_motor_on_1_97 + 1)
-	jnz	L015007?
-;	EFM8_JDY40_Receiver.c:362: motor_on = 1;
-	mov	_main_motor_on_1_97,#0x01
-	clr	a
-	mov	(_main_motor_on_1_97 + 1),a
-	sjmp	L015008?
 L015007?:
-;	EFM8_JDY40_Receiver.c:363: }else if(P3_7 == 0 && motor_on){
-	jb	_P3_7,L015008?
-	mov	a,_main_motor_on_1_97
-	orl	a,(_main_motor_on_1_97 + 1)
-	jz	L015008?
-;	EFM8_JDY40_Receiver.c:364: motor_on = 0;
-	clr	a
-	mov	_main_motor_on_1_97,a
-	mov	(_main_motor_on_1_97 + 1),a
-L015008?:
-;	EFM8_JDY40_Receiver.c:367: printf("LX: %0.4f, RY: %0.4f\n, Motor State: %d", iXAngle, iYAngle, motor_on);
-	push	ar2
-	push	ar3
+;	EFM8_JDY40_Receiver.c:362: if(P3_7 == 0 && !motor_on){
+	jb	_P3_7,L015012?
+	mov	a,r4
+	orl	a,r5
+;	EFM8_JDY40_Receiver.c:363: motor_on = 1;
+	jnz	L015012?
+	mov	r4,#0x01
+	mov	r5,a
+	sjmp	L015013?
+L015012?:
+;	EFM8_JDY40_Receiver.c:364: }else if(P3_7 == 0 && motor_on){
+	jb	_P3_7,L015013?
+	mov	a,r4
+	orl	a,r5
+	jz	L015013?
+;	EFM8_JDY40_Receiver.c:365: motor_on = 0;
+	mov	r4,#0x00
+	mov	r5,#0x00
+L015013?:
+;	EFM8_JDY40_Receiver.c:368: printf("LX: %0.4f, RY: %0.4f\n, Motor State: %d", iXAngle, iYAngle, motor_on);
 	push	ar4
 	push	ar5
-	push	_main_motor_on_1_97
-	push	(_main_motor_on_1_97 + 1)
+	push	ar4
+	push	ar5
 	push	_main_sloc0_1_0
 	push	(_main_sloc0_1_0 + 1)
 	push	(_main_sloc0_1_0 + 2)
 	push	(_main_sloc0_1_0 + 3)
-	push	ar2
-	push	ar3
-	push	ar4
-	push	ar5
+	push	_main_sloc1_1_0
+	push	(_main_sloc1_1_0 + 1)
+	push	(_main_sloc1_1_0 + 2)
+	push	(_main_sloc1_1_0 + 3)
 	mov	a,#__str_10
 	push	acc
 	mov	a,#(__str_10 >> 8)
@@ -1479,14 +1540,12 @@ L015008?:
 	mov	a,sp
 	add	a,#0xf3
 	mov	sp,a
-;	EFM8_JDY40_Receiver.c:369: waitms_or_RI1(100);
+;	EFM8_JDY40_Receiver.c:370: waitms_or_RI1(100);
 	mov	dptr,#0x0064
 	lcall	_waitms_or_RI1
 	pop	ar5
 	pop	ar4
-	pop	ar3
-	pop	ar2
-	ljmp	L015011?
+	ljmp	L015016?
 	rseg R_CSEG
 
 	rseg R_XINIT
