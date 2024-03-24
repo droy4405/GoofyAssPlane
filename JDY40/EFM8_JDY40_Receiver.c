@@ -287,6 +287,10 @@ void main (void)
 	int i;
 	int j;
 
+	//PWM variables
+	float potentiometerReading;
+	float duty;
+
 	float motor_PWM_DutyCycleWidth = 1;
 
 	// this variable is only for testing purposes
@@ -324,35 +328,44 @@ void main (void)
 
 	while(1)
 	{
+		//PWM receiving signals from the fucking potentiometer
+		if(RXU1()){
+			getstr1(buff);
 
-		// determing if the motor needs to be turned on
-		if(motor_on){
+			potentiometerReading = atof(buff);
+
+			duty = 1.3 + potentiometerReading/10;
+
+			// determing if the motor needs to be turned on
+			if(motor_on){
 			// if motor needs to be turned on change the duty cycle to 1.3ms
-			motor_PWM_DutyCycleWidth = 1.3;
+			motor_PWM_DutyCycleWidth = duty;
 			
-		}else if(!motor_on){
+			}else if(!motor_on){
 			// otherwise writing 1ms to PWM pulse width for 0% throttle
 			motor_PWM_DutyCycleWidth = 1;
+			}
+
 		}
 
 		// writing to the motor throttle
 		pwm_reload=0x10000L-(SYSCLK*motor_PWM_DutyCycleWidth*1.0e-3)/12.0;
 
-		if(RXU1())
-		{
-			getstr1(buff);
+		// if(RXU1())
+		// {
+		// 	getstr1(buff);
 			
-			for(i = 0; i < 5; i++){
-				sXAngle[i] = buff[i];
-			}
-			for(j = 7; j < 11; j++){
-				sYAngle[j-7] = buff[j];
-			}
+		// 	for(i = 0; i < 5; i++){
+		// 		sXAngle[i] = buff[i];
+		// 	}
+		// 	for(j = 7; j < 11; j++){
+		// 		sYAngle[j-7] = buff[j];
+		// 	}
 
-			iXAngle = atof(sXAngle);
-			iYAngle = atof(sYAngle);
+		// 	iXAngle = atof(sXAngle);
+		// 	iYAngle = atof(sYAngle);
 
-		}
+		// }
 
 		// determining if the BLDC needs to be turned on
 		// for testing purposes, the motor will alsways run on min rpm

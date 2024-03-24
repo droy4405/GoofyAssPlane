@@ -340,6 +340,8 @@ void main (void)
 	char X_pos_L_string[5];
 	int count = 0;
 
+	float potentiometer;
+
 	// this important variable is used to change the PWM duty
 	// cycle in charge of controlling the motor throttle
 	float PWM_DutyCyclePeriod = 1; // initiallized to be 1ms for 0% throttle
@@ -384,10 +386,13 @@ void main (void)
 		// readng the analog voltage of left joystick X position
 		// on pin 2.1
 
-		X_pos_L = Volts_at_Pin(QFP32_MUX_P2_1);
-		Y_pos_R = Volts_at_Pin(QFP32_MUX_P1_2);
+		// X_pos_L = Volts_at_Pin(QFP32_MUX_P2_1);
+		// Y_pos_R = Volts_at_Pin(QFP32_MUX_P1_2);
 		
-		sprintf(buff, "%0.4f %0.4f\r\n", X_pos_L, Y_pos_R);
+		// // sprintf(buff, "%0.4f %0.4f\r\n", X_pos_L, Y_pos_R);
+
+		potentiometer = Volts_at_Pin(QFP32_MUX_P2_3);
+		sprintf(buff, "%0.1f \r\n", potentiometer);
 
 		//sprintf(buff, "test %d\n",count++);
 		sendstr1(buff);
