@@ -6,26 +6,22 @@ EFM8_JDY40_Transmitter
 --model-small
 </OPTC51>
 
-<PRINTF_FLOAT>
-printf_float
-</PRINTF_FLOAT>
-
 <SEGMENTS>
 R_GSINIT,code,0000,NO
 R_BSEG,bit,0000,NO
 R_XSEG,xdata,0000,NO
 BIT_BANK,data,0000,OV
-R_CONST,code,0078,NO
+R_CONST,code,007F,NO
 rbank0,data,0000,OV
 R_PSEG,xdata,0000,NO
 R_DINIT,code,0000,NO
-R_DSEG,data,0005,NO
+R_DSEG,data,000D,NO
 R_OSEG,data,0001,OV
 R_IXSEG,xdata,0000,NO
 R_ISEG,idata,0014,NO
 R_HOME,code,0000,NO
 R_XINIT,code,0000,NO
-R_CSEG,code,04BD,NO
+R_CSEG,code,058C,NO
 </SEGMENTS>
 
 <LOCALS>
@@ -43,7 +39,7 @@ L007013?,R_CSEG,00E9,0000
 L016003?,R_CSEG,02C3,0000
 L007011?,R_CSEG,00E7,0000
 __str_10,R_CONST,006E,0000
-__str_11,R_CONST,0075,0000
+__str_11,R_CONST,007C,0000
 L017004?,R_CSEG,02FE,0000
 L017002?,R_CSEG,031C,0000
 L005007?,R_CSEG,009D,0000
@@ -74,11 +70,13 @@ __str_8,R_CONST,005A,0000
 __str_9,R_CONST,0064,0000
 L011002?,R_CSEG,01B2,0000
 L008001?,R_CSEG,0123,0000
+_main_X_pos_L_1_111,R_DSEG,0000,0004
 L009001?,R_CSEG,0134,0000
 L016012?,R_CSEG,02DF,0000
+_main_Y_pos_R_1_111,R_DSEG,0004,0004
 L013008?,R_CSEG,0279,0000
 L013001?,R_CSEG,0274,0000
-_main_X_pos_L_string_1_111,R_DSEG,0000,0005
+_main_X_pos_L_string_1_111,R_DSEG,0008,0005
 L014004?,R_CSEG,02A9,0000
 L014001?,R_CSEG,0285,0000
 </LOCALS>
@@ -112,6 +110,7 @@ _waitms,R_CSEG,00A1,0000
 __gptrget,any,0000,0000
 __divulong,any,0000,0000
 ___uint2fs,any,0000,0000
+___fs2sint,any,0000,0000
 ___fsmul,any,0000,0000
 _printf,any,0000,0000
 __divulong_PARM_2,any,0000,0000
@@ -639,7 +638,7 @@ C0 E0
 E4
 F5 F0
 12 addr16(_UART1_Init;)  
-75 data8(_InitPinADC_PARM_2;) 01
+75 data8(_InitPinADC_PARM_2;) 02
 75 82 02
 12 addr16(_InitPinADC;)  
 75 data8(_InitPinADC_PARM_2;) 02
@@ -670,16 +669,104 @@ F5 F0
 90 data16(__str_9;)  
 75 F0 80
 12 addr16(_SendATCommand;)  
+75 82 0F
+12 addr16(_Volts_at_Pin;)  
+85 82 data8(_main_X_pos_L_1_111;)
+85 83 data8(_main_X_pos_L_1_111;0x0001;+;)
+85 F0 data8(_main_X_pos_L_1_111;0x0002;+;)
+F5 data8(_main_X_pos_L_1_111;0x0003;+;)
+75 82 08
+12 addr16(_Volts_at_Pin;)  
+85 82 data8(_main_Y_pos_R_1_111;)
+85 83 data8(_main_Y_pos_R_1_111;0x0001;+;)
+85 F0 data8(_main_Y_pos_R_1_111;0x0002;+;)
+F5 data8(_main_Y_pos_R_1_111;0x0003;+;)
+C0 data8(_main_X_pos_L_1_111;)
+C0 data8(_main_X_pos_L_1_111;0x0001;+;)
+C0 data8(_main_X_pos_L_1_111;0x0002;+;)
+C0 data8(_main_X_pos_L_1_111;0x0003;+;)
+90 00 00
+75 F0 7A
+74 44
+12 addr16(___fsmul;)  
+85 82 data8(_main_X_pos_L_1_111;)
+85 83 data8(_main_X_pos_L_1_111;0x0001;+;)
+85 F0 data8(_main_X_pos_L_1_111;0x0002;+;)
+F5 data8(_main_X_pos_L_1_111;0x0003;+;)
+E5 81
+24 FC
+F5 81
+C0 data8(_main_Y_pos_R_1_111;)
+C0 data8(_main_Y_pos_R_1_111;0x0001;+;)
+C0 data8(_main_Y_pos_R_1_111;0x0002;+;)
+C0 data8(_main_Y_pos_R_1_111;0x0003;+;)
+90 00 00
+75 F0 7A
+74 44
+12 addr16(___fsmul;)  
+85 82 data8(_main_Y_pos_R_1_111;)
+85 83 data8(_main_Y_pos_R_1_111;0x0001;+;)
+85 F0 data8(_main_Y_pos_R_1_111;0x0002;+;)
+F5 data8(_main_Y_pos_R_1_111;0x0003;+;)
+E5 81
+24 FC
+F5 81
 75 82 10
 12 addr16(_throttle_control_ADC;)  
-AA 82
-AB 83
-AC F0
-FD
-C0 02
-C0 03
+AC 82
+AD 83
+AA F0
+FB
 C0 04
 C0 05
+C0 02
+C0 03
+90 00 00
+75 F0 7A
+74 44
+12 addr16(___fsmul;)  
+AC 82
+AD 83
+AA F0
+FB
+E5 81
+24 FC
+F5 81
+8C 82
+8D 83
+8A F0
+EB
+12 addr16(___fs2sint;)  
+AA 82
+AB 83
+85 data8(_main_Y_pos_R_1_111;) 82
+85 data8(_main_Y_pos_R_1_111;0x0001;+;) 83
+85 data8(_main_Y_pos_R_1_111;0x0002;+;) F0
+E5 data8(_main_Y_pos_R_1_111;0x0003;+;)
+C0 02
+C0 03
+12 addr16(___fs2sint;)  
+AC 82
+AD 83
+85 data8(_main_X_pos_L_1_111;) 82
+85 data8(_main_X_pos_L_1_111;0x0001;+;) 83
+85 data8(_main_X_pos_L_1_111;0x0002;+;) F0
+E5 data8(_main_X_pos_L_1_111;0x0003;+;)
+C0 04
+C0 05
+12 addr16(___fs2sint;)  
+AE 82
+AF 83
+74 04
+C0 E0
+E4
+C0 E0
+C0 06
+C0 07
+74 04
+C0 E0
+E4
+C0 E0
 74 data8(__str_10;)
 C0 E0
 74 data8(__str_10;0x0008;>>;)
@@ -694,7 +781,7 @@ C0 E0
 C0 E0
 12 addr16(_sprintf;)  
 E5 81
-24 F6
+24 F0
 F5 81
 74 data8(_buff;)
 C0 E0
@@ -717,7 +804,7 @@ F5 81
 12 addr16(_sendstr1;)  
 90 00 64
 12 addr16(_waitms_or_RI1;)  
-80 rel2(L021002?;)
+02 addr16(L021002?;)  
 </CODE>
 
 <CODE R_CSEG>
@@ -767,7 +854,7 @@ F5 81
 0D
 0A
 00
-25 30 2E 34 66 
+25 30 2A 64 20 25 30 2A 64 20 25 64 
 0A
 00
 25 73 

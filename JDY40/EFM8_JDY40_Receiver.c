@@ -655,10 +655,13 @@ void main (void)
 {
 	char sXAngle[4];
 	char sYAngle[4];
-	float iXAngle = 0;
-	float iYAngle = 0;
+	char sThrottle[4];
+	float fXAngle = 0;
+	float fYAngle = 0;
+	float fThrottle = 0;
 	int i;
 	int j;
+	int k;
 
 	//PWM variables
 	float potentiometerReading;
@@ -703,8 +706,25 @@ void main (void)
 		//PWM receiving signals from the fucking potentiometer
 		if(RXU1()){
 			getstr1(buff);
+			// checking the length of buff to determine if there is data loss
+			if(strlen(buff) == 14){
+				for(i = 0; i < 4; i++){
+				sXAngle[i] = buff[i];
+				}
+				for(j = 5; j < 9; j++){
+					sYAngle[j-5] = buff[j];
+				}
+				for(k = 10; k < 14; k++){
+					sThrottle[k-10] = buff[k];
+				}
 
-			potentiometerReading = atof(buff);
+				fXAngle = atoi(sXAngle)/1000.0;
+				fYAngle = atoi(sYAngle)/1000.0;
+
+				potentiometerReading = atoi(buff)/1000.0;
+
+				printf("X: %0.4f, Y: %0.4f, T: %0.4f\n");
+			}
 
 			// determing if the motor needs to be turned on
 			if(motor_on){
@@ -716,26 +736,9 @@ void main (void)
 				motor_PWM_DutyCycleWidth = 1;
 			}
 
+			// writing to the motor throttle
+			pwm_reload=0x10000L-(SYSCLK*motor_PWM_DutyCycleWidth*1.0e-3)/12.0;
 		}
-
-		// writing to the motor throttle
-		pwm_reload=0x10000L-(SYSCLK*motor_PWM_DutyCycleWidth*1.0e-3)/12.0;
-
-		// if(RXU1())
-		// {
-		// 	getstr1(buff);
-			
-		// 	for(i = 0; i < 5; i++){
-		// 		sXAngle[i] = buff[i];
-		// 	}
-		// 	for(j = 7; j < 11; j++){
-		// 		sYAngle[j-7] = buff[j];
-		// 	}
-
-		// 	iXAngle = atof(sXAngle);
-		// 	iYAngle = atof(sYAngle);
-
-		// }
 
 		// determining if the BLDC needs to be turned on
 		// for testing purposes, the motor will alsways run on min rpm
@@ -748,8 +751,8 @@ void main (void)
 			motor_on = 0;
 		}
 
-		printf("Duty: %0.4f, Motor State: %d, Potentiometer: %0.4f\n",
-		 motor_PWM_DutyCycleWidth, motor_on,potentiometerReading);
+		// printf("Duty: %0.4f, Motor State: %d, Potentiometer: %0.4f\n",
+		//  motor_PWM_DutyCycleWidth, motor_on,potentiometerReading);
 
 		waitms_or_RI1(100);
 	}

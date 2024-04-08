@@ -750,7 +750,7 @@ void main (void)
 	printf("\r\nJDY-40 test\r\n");
 	UART1_Init(9600);
 
-	InitPinADC(2, 1); // Configure P0.1 as analog input
+	InitPinADC(2, 2); // Configure P0.1 as analog input
 	InitPinADC(1, 2); // Configure P2.3 as analog input
 	InitADC();
 
@@ -785,16 +785,20 @@ void main (void)
 		// readng the analog voltage of left joystick X position
 		// on pin 2.1
 
-		// X_pos_L = Volts_at_Pin(QFP32_MUX_P2_1);
-		// Y_pos_R = Volts_at_Pin(QFP32_MUX_P1_2);
+		X_pos_L = Volts_at_Pin(QFP32_MUX_P2_2);
+		Y_pos_R = Volts_at_Pin(QFP32_MUX_P1_2);
 		
-		// // sprintf(buff, "%0.4f %0.4f\r\n", X_pos_L, Y_pos_R);
+		// casting the coords to send with RC
+		X_pos_L *= 1000;
+		Y_pos_R *= 1000;
 
 		//potentiometer = Volts_at_Pin(QFP32_MUX_P2_3);
 		potentiometer = throttle_control_ADC(QFP32_MUX_P2_3);
 
+		// casting throttle reading into int for radio sending
+		potentiometer *= 1000;
 		
-		sprintf(buff, "%0.4f\n", potentiometer);
+		sprintf(buff, "%0*d %0*d %d\n", 4, (int)X_pos_L, 4, (int)Y_pos_R, (int)potentiometer);
 
 		//sprintf(buff, "test %d\n",count++);
 		printf("%s",buff);
