@@ -752,6 +752,8 @@ void main (void)
 
 	InitPinADC(2, 2); // Configure P0.1 as analog input
 	InitPinADC(1, 2); // Configure P2.3 as analog input
+	InitPinADC(2, 3);
+	InitPinADC(2, 1);
 	InitADC();
 
 	// To configure the device (shown here using default values).

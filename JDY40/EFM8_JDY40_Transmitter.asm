@@ -1,7 +1,7 @@
 ;--------------------------------------------------------
 ; File Created by C51
 ; Version 1.0.0 #1170 (Feb 16 2022) (MSVC)
-; This file was generated Mon Apr 08 13:22:57 2024
+; This file was generated Mon Apr 08 16:00:21 2024
 ;--------------------------------------------------------
 $name EFM8_JDY40_Transmitter
 $optc51 --model-small
@@ -1451,57 +1451,65 @@ _main:
 	mov	_InitPinADC_PARM_2,#0x02
 	mov	dpl,#0x01
 	lcall	_InitPinADC
-;	EFM8_JDY40_Transmitter.c:755: InitADC();
+;	EFM8_JDY40_Transmitter.c:755: InitPinADC(2, 3);
+	mov	_InitPinADC_PARM_2,#0x03
+	mov	dpl,#0x02
+	lcall	_InitPinADC
+;	EFM8_JDY40_Transmitter.c:756: InitPinADC(2, 1);
+	mov	_InitPinADC_PARM_2,#0x01
+	mov	dpl,#0x02
+	lcall	_InitPinADC
+;	EFM8_JDY40_Transmitter.c:757: InitADC();
 	lcall	_InitADC
-;	EFM8_JDY40_Transmitter.c:771: SendATCommand("AT+DVID2385\r\n");  
+;	EFM8_JDY40_Transmitter.c:773: SendATCommand("AT+DVID2385\r\n");  
 	mov	dptr,#__str_2
 	mov	b,#0x80
 	lcall	_SendATCommand
-;	EFM8_JDY40_Transmitter.c:774: SendATCommand("AT+VER\r\n");
+;	EFM8_JDY40_Transmitter.c:776: SendATCommand("AT+VER\r\n");
 	mov	dptr,#__str_3
 	mov	b,#0x80
 	lcall	_SendATCommand
-;	EFM8_JDY40_Transmitter.c:775: SendATCommand("AT+BAUD\r\n");
+;	EFM8_JDY40_Transmitter.c:777: SendATCommand("AT+BAUD\r\n");
 	mov	dptr,#__str_4
 	mov	b,#0x80
 	lcall	_SendATCommand
-;	EFM8_JDY40_Transmitter.c:776: SendATCommand("AT+RFID\r\n");
+;	EFM8_JDY40_Transmitter.c:778: SendATCommand("AT+RFID\r\n");
 	mov	dptr,#__str_5
 	mov	b,#0x80
 	lcall	_SendATCommand
-;	EFM8_JDY40_Transmitter.c:777: SendATCommand("AT+DVID\r\n");
+;	EFM8_JDY40_Transmitter.c:779: SendATCommand("AT+DVID\r\n");
 	mov	dptr,#__str_6
 	mov	b,#0x80
 	lcall	_SendATCommand
-;	EFM8_JDY40_Transmitter.c:778: SendATCommand("AT+RFC\r\n");
+;	EFM8_JDY40_Transmitter.c:780: SendATCommand("AT+RFC\r\n");
 	mov	dptr,#__str_7
 	mov	b,#0x80
 	lcall	_SendATCommand
-;	EFM8_JDY40_Transmitter.c:779: SendATCommand("AT+POWE\r\n");
+;	EFM8_JDY40_Transmitter.c:781: SendATCommand("AT+POWE\r\n");
 	mov	dptr,#__str_8
 	mov	b,#0x80
 	lcall	_SendATCommand
-;	EFM8_JDY40_Transmitter.c:780: SendATCommand("AT+CLSS\r\n");
+;	EFM8_JDY40_Transmitter.c:782: SendATCommand("AT+CLSS\r\n");
 	mov	dptr,#__str_9
 	mov	b,#0x80
 	lcall	_SendATCommand
-;	EFM8_JDY40_Transmitter.c:783: while(1)
+;	EFM8_JDY40_Transmitter.c:785: while(1)
 L021002?:
-;	EFM8_JDY40_Transmitter.c:788: X_pos_L = Volts_at_Pin(QFP32_MUX_P2_2);
+;	EFM8_JDY40_Transmitter.c:790: X_pos_L = Volts_at_Pin(QFP32_MUX_P2_2);
 	mov	dpl,#0x0F
 	lcall	_Volts_at_Pin
 	mov	_main_X_pos_L_1_111,dpl
 	mov	(_main_X_pos_L_1_111 + 1),dph
 	mov	(_main_X_pos_L_1_111 + 2),b
 	mov	(_main_X_pos_L_1_111 + 3),a
-;	EFM8_JDY40_Transmitter.c:789: Y_pos_R = Volts_at_Pin(QFP32_MUX_P1_2);
+;	EFM8_JDY40_Transmitter.c:791: Y_pos_R = Volts_at_Pin(QFP32_MUX_P1_2);
 	mov	dpl,#0x08
 	lcall	_Volts_at_Pin
 	mov	_main_Y_pos_R_1_111,dpl
 	mov	(_main_Y_pos_R_1_111 + 1),dph
 	mov	(_main_Y_pos_R_1_111 + 2),b
 	mov	(_main_Y_pos_R_1_111 + 3),a
-;	EFM8_JDY40_Transmitter.c:792: X_pos_L *= 1000;
+;	EFM8_JDY40_Transmitter.c:794: X_pos_L *= 1000;
 	push	_main_X_pos_L_1_111
 	push	(_main_X_pos_L_1_111 + 1)
 	push	(_main_X_pos_L_1_111 + 2)
@@ -1517,7 +1525,7 @@ L021002?:
 	mov	a,sp
 	add	a,#0xfc
 	mov	sp,a
-;	EFM8_JDY40_Transmitter.c:793: Y_pos_R *= 1000;
+;	EFM8_JDY40_Transmitter.c:795: Y_pos_R *= 1000;
 	push	_main_Y_pos_R_1_111
 	push	(_main_Y_pos_R_1_111 + 1)
 	push	(_main_Y_pos_R_1_111 + 2)
@@ -1533,14 +1541,14 @@ L021002?:
 	mov	a,sp
 	add	a,#0xfc
 	mov	sp,a
-;	EFM8_JDY40_Transmitter.c:796: potentiometer = throttle_control_ADC(QFP32_MUX_P2_3);
+;	EFM8_JDY40_Transmitter.c:798: potentiometer = throttle_control_ADC(QFP32_MUX_P2_3);
 	mov	dpl,#0x10
 	lcall	_throttle_control_ADC
 	mov	r4,dpl
 	mov	r5,dph
 	mov	r2,b
 	mov	r3,a
-;	EFM8_JDY40_Transmitter.c:799: potentiometer *= 1000;
+;	EFM8_JDY40_Transmitter.c:801: potentiometer *= 1000;
 	push	ar4
 	push	ar5
 	push	ar2
@@ -1556,7 +1564,7 @@ L021002?:
 	mov	a,sp
 	add	a,#0xfc
 	mov	sp,a
-;	EFM8_JDY40_Transmitter.c:801: sprintf(buff, "%0*d %0*d %d\n", 4, (int)X_pos_L, 4, (int)Y_pos_R, (int)potentiometer);
+;	EFM8_JDY40_Transmitter.c:803: sprintf(buff, "%0*d %0*d %d\n", 4, (int)X_pos_L, 4, (int)Y_pos_R, (int)potentiometer);
 	mov	dpl,r4
 	mov	dph,r5
 	mov	b,r2
@@ -1608,7 +1616,7 @@ L021002?:
 	mov	a,sp
 	add	a,#0xf0
 	mov	sp,a
-;	EFM8_JDY40_Transmitter.c:804: printf("%s",buff);
+;	EFM8_JDY40_Transmitter.c:806: printf("%s",buff);
 	mov	a,#_buff
 	push	acc
 	mov	a,#(_buff >> 8)
@@ -1625,11 +1633,11 @@ L021002?:
 	mov	a,sp
 	add	a,#0xfa
 	mov	sp,a
-;	EFM8_JDY40_Transmitter.c:805: sendstr1(buff);
+;	EFM8_JDY40_Transmitter.c:807: sendstr1(buff);
 	mov	dptr,#_buff
 	mov	b,#0x40
 	lcall	_sendstr1
-;	EFM8_JDY40_Transmitter.c:807: waitms_or_RI1(100);
+;	EFM8_JDY40_Transmitter.c:809: waitms_or_RI1(100);
 	mov	dptr,#0x0064
 	lcall	_waitms_or_RI1
 	ljmp	L021002?

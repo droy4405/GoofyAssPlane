@@ -708,28 +708,36 @@ void main (void)
 			getstr1(buff);
 			// checking the length of buff to determine if there is data loss
 			if(strlen(buff) == 14){
+				//printf("%s\n", buff);
 				for(i = 0; i < 4; i++){
-				sXAngle[i] = buff[i];
+					sXAngle[i] = buff[i];
 				}
+				sXAngle[4] = '\0';
+				fXAngle = atoi(sXAngle)/1000.0;
+
 				for(j = 5; j < 9; j++){
 					sYAngle[j-5] = buff[j];
 				}
-				for(k = 10; k < 14; k++){
-					sThrottle[k-10] = buff[k];
-				}
-
-				fXAngle = atoi(sXAngle)/1000.0;
+				sYAngle[4] = '\0';
 				fYAngle = atoi(sYAngle)/1000.0;
 
-				potentiometerReading = atoi(buff)/1000.0;
+				for(k = 10; k < 14; k++){ 
+					sThrottle[k-10] = buff[k];
+				}
+				sThrottle[4] = '\0';
+				potentiometerReading = atoi(sThrottle)/1000.0;
+				
+				printf("X: %0.4f, ",fXAngle);
+				printf("Y: %0.4f, ",fYAngle);
+				printf("T: %0.4f\n",potentiometerReading);
 
-				printf("X: %0.4f, Y: %0.4f, T: %0.4f\n");
+				//printf("X: %0.4f, Y: %0.4f, T: %0.4f\n", fXAngle, fYAngle, potentiometerReading);
 			}
 
 			// determing if the motor needs to be turned on
 			if(motor_on){
 			//if motor needs to be turned on change the duty cycle to 1.3ms
-				motor_PWM_DutyCycleWidth = 2.0 - potentiometerReading/5;
+				motor_PWM_DutyCycleWidth = 2.0 - (potentiometerReading-1.0)/4.0;
 			
 			}else if(!motor_on){
 			// otherwise writing 1ms to PWM pulse width for 0% throttle
