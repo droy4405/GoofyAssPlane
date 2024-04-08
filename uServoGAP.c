@@ -15,6 +15,19 @@ volatile unsigned char servo1=150, servo2=150;
 #define SERVO2   P1_7
 #define EMAGNET  P1_6
 
+#define TIMER_2_FREQ 4000L
+#define TIMER_3_FREQ 4000L
+#define TIMER_4_FREQ 4000L
+
+#define TIMER_OUT_2 P1_6
+#define TIMER_OUT_3 P1_5
+#define TIMER_OUT_4 P1_4
+#define TIMER_OUT_5 P1_3
+#define MAIN_OUT    P0_1 // Updated in the main program
+#define PCA_OUT_2   P1_0
+#define PCA_OUT_3   P0_7
+#define PCA_OUT_4   P0_6
+
 #define SYSCLK 72000000L // SYSCLK frequency in Hz
 #define BAUDRATE 115200L
 #define RELOAD_10us (0x10000L-(SYSCLK/(12L*100000L))) // 10us rate
@@ -87,26 +100,46 @@ char _c51_external_startup (void)
 	TR1 = 1; // START Timer1
 	TI = 1;  // Indicate TX0 ready
 
-	// Initialize timer 5 for periodic interrupts
-	SFRPAGE=0x10;
-	TMR5CN0=0x00;
-	TMR5=0xffff;   // Set to reload immediately
-	EIE2|=0b_0000_1000; // Enable Timer5 interrupts
-	TR5=1;         // Start Timer5 (TMR5CN0 is bit addressable)
+// Initialize timer 2 for periodic interrupts
+	TMR2CN0=0x00;   // Stop Timer2; Clear TF2;
+	CKCON0|=0b_0001_0000; // Timer 2 uses the system clock
+	TMR2RL=(0x10000L-(SYSCLK/(2*TIMER_2_FREQ))); // Initialize reload value
+	TMR2=0xffff;   // Set to reload immediately
+	ET2=1;         // Enable Timer2 interrupts
+	TR2=1;         // Start Timer2 (TMR2CN is bit addressable)
 	
-	EA=1; 
+// // Initialize timer 3 for periodic interrupts
+// 	TMR3CN0=0x00;   // Stop Timer3; Clear TF3;
+// 	CKCON0|=0b_0100_0000; // Timer 3 uses the system clock
+// 	TMR3RL=(0x10000L-(SYSCLK/(2*TIMER_3_FREQ))); // Initialize reload value
+// 	TMR3=0xffff;   // Set to reload immediately
+// 	EIE1|=0b_1000_0000;     // Enable Timer3 interrupts
+// 	TMR3CN0|=0b_0000_0100;  // Start Timer3 (TMR3CN0 is not bit addressable)
+
+// 	// Initialize timer 4 for periodic interrupts
+// 	SFRPAGE=0x10;
+// 	TMR4CN0=0x00;   // Stop Timer4; Clear TF4; WARNING: lives in SFR page 0x10
+// 	CKCON1|=0b_0000_0001; // Timer 4 uses the system clock
+// 	TMR4RL=(0x10000L-(SYSCLK/(2*TIMER_4_FREQ))); // Initialize reload value
+// 	TMR4=0xffff;   // Set to reload immediately
+// 	EIE2|=0b_0000_0100;     // Enable Timer4 interrupts
+// 	TR4=1;
+
+	EA=1;
 	
-	SFRPAGE=0x00;
+	//SFRPAGE=0x00;
 	
 	return 0;
 }
 
-void Timer5_ISR (void) interrupt INTERRUPT_TIMER5
+void Timer2_ISR (void) interrupt INTERRUPT_TIMER2
 {
-	SFRPAGE=0x10;
-	TF5H = 0; // Clear Timer5 interrupt flag
-	TMR5RL=RELOAD_10us;
+	SFRPAGE=0x0;
+	TF2H = 0; // Clear Timer2 interrupt flag
+   
+	
 	servo_counter++;
+
 	if(servo_counter==2000)
 	{
 		servo_counter=0;
@@ -127,6 +160,7 @@ void Timer5_ISR (void) interrupt INTERRUPT_TIMER5
 	{
 		SERVO2=0;
 	}
+    TIMER_OUT_2=!TIMER_OUT_2;
 }
 
 // Uses Timer3 to delay <us> micro-seconds. 
@@ -148,6 +182,7 @@ void Timer3us(unsigned char us)
 	}
 	TMR3CN0 = 0 ;                   // Stop Timer3 and clear overflow flag
 }
+
 
 void waitms (unsigned int ms)
 {
@@ -176,7 +211,6 @@ void main (void)
 	        "Compiled: %s, %s\n\n",
 	        __FILE__, __DATE__, __TIME__);
 		
-while(1) {
 	for(k=0; k<4; k++)
 	{
 		for(j=80; j<220; j+=5)
@@ -192,6 +226,4 @@ while(1) {
 			waitms(20);
 		}
 	}
-}
-
 }
