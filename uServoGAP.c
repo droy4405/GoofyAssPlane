@@ -15,7 +15,7 @@ volatile unsigned char servo1=150, servo2=150;
 #define SERVO2   P1_7
 #define EMAGNET  P1_6
 
-#define TIMER_2_FREQ 4000L
+#define TIMER_2_FREQ 100000L
 #define TIMER_3_FREQ 4000L
 #define TIMER_4_FREQ 4000L
 
@@ -136,7 +136,8 @@ void Timer2_ISR (void) interrupt INTERRUPT_TIMER2
 {
 	SFRPAGE=0x0;
 	TF2H = 0; // Clear Timer2 interrupt flag
-   
+   	TMR2RL=TMR2RL=0x10000L-(SYSCLK/(2*TIMER_2_FREQ));;
+
 	
 	servo_counter++;
 
@@ -160,7 +161,7 @@ void Timer2_ISR (void) interrupt INTERRUPT_TIMER2
 	{
 		SERVO2=0;
 	}
-    TIMER_OUT_2=!TIMER_OUT_2;
+    // TIMER_OUT_2=!TIMER_OUT_2;
 }
 
 // Uses Timer3 to delay <us> micro-seconds. 
