@@ -1,9 +1,9 @@
 ;--------------------------------------------------------
 ; File Created by C51
 ; Version 1.0.0 #1170 (Feb 16 2022) (MSVC)
-; This file was generated Mon Apr 08 16:00:21 2024
+; This file was generated Wed Apr 10 15:58:17 2024
 ;--------------------------------------------------------
-$name EFM8_JDY40_Transmitter
+$name EFM8_JDY40_Receiver
 $optc51 --model-small
 	R_DSEG    segment data
 	R_CSEG    segment code
@@ -23,7 +23,6 @@ $optc51 --model-small
 ;--------------------------------------------------------
 ; Public variables in this module
 ;--------------------------------------------------------
-	public _InitPinADC_PARM_2
 	public _main
 	public _SendATCommand
 	public _waitms_or_RI1
@@ -34,17 +33,14 @@ $optc51 --model-small
 	public _sendstr1
 	public _putchar1
 	public _UART1_Init
-	public _throttle_control_ADC
-	public _Volts_at_Pin
-	public _ADC_at_Pin
-	public _Get_ADC
-	public _InitPinADC
 	public _waitms
 	public _Timer3us
-	public _TIMER0_Init
-	public _InitADC
+	public _Timer5_ISR
 	public __c51_external_startup
 	public _buff
+	public _count20ms
+	public _pwm_state
+	public _pwm_reload
 ;--------------------------------------------------------
 ; Special Function Registers
 ;--------------------------------------------------------
@@ -493,19 +489,35 @@ _TFRQ           BIT 0xdf
 ; internal ram data
 ;--------------------------------------------------------
 	rseg R_DSEG
-_main_X_pos_L_1_111:
+_pwm_reload:
+	ds 2
+_pwm_state:
+	ds 1
+_count20ms:
+	ds 1
+_main_sXAngle_1_97:
 	ds 4
-_main_Y_pos_R_1_111:
+_main_sYAngle_1_97:
 	ds 4
-_main_X_pos_L_string_1_111:
-	ds 5
+_main_sThrottle_1_97:
+	ds 4
+_main_i_1_97:
+	ds 2
+_main_j_1_97:
+	ds 2
+_main_k_1_97:
+	ds 2
+_main_potentiometerReading_1_97:
+	ds 4
+_main_motor_on_1_97:
+	ds 2
+_main_sloc0_1_0:
+	ds 4
+_main_sloc1_1_0:
+	ds 4
 ;--------------------------------------------------------
 ; overlayable items in internal ram 
 ;--------------------------------------------------------
-	rseg	R_OSEG
-	rseg	R_OSEG
-_InitPinADC_PARM_2:
-	ds 1
 	rseg	R_OSEG
 	rseg	R_OSEG
 	rseg	R_OSEG
@@ -547,6 +559,8 @@ _buff:
 ;--------------------------------------------------------
 	CSEG at 0x0000
 	ljmp	_crt0
+	CSEG at 0x0093
+	ljmp	_Timer5_ISR
 ;--------------------------------------------------------
 ; global & static initialisations
 ;--------------------------------------------------------
@@ -557,6 +571,8 @@ _buff:
 ; data variables initialization
 ;--------------------------------------------------------
 	rseg R_DINIT
+;	EFM8_JDY40_Receiver.c:12: volatile unsigned char pwm_state = 0;
+	mov	_pwm_state,#0x00
 	; The linker places a 'ret' at the end of segment R_DINIT.
 ;--------------------------------------------------------
 ; code
@@ -566,155 +582,219 @@ _buff:
 ;Allocation info for local variables in function '_c51_external_startup'
 ;------------------------------------------------------------
 ;------------------------------------------------------------
-;	EFM8_JDY40_Transmitter.c:409: char _c51_external_startup (void)
+;	EFM8_JDY40_Receiver.c:19: char _c51_external_startup (void)
 ;	-----------------------------------------
 ;	 function _c51_external_startup
 ;	-----------------------------------------
 __c51_external_startup:
 	using	0
-;	EFM8_JDY40_Transmitter.c:412: SFRPAGE = 0x00;
+;	EFM8_JDY40_Receiver.c:22: SFRPAGE = 0x00;
 	mov	_SFRPAGE,#0x00
-;	EFM8_JDY40_Transmitter.c:413: WDTCN = 0xDE; //First key
+;	EFM8_JDY40_Receiver.c:23: WDTCN = 0xDE; //First key
 	mov	_WDTCN,#0xDE
-;	EFM8_JDY40_Transmitter.c:414: WDTCN = 0xAD; //Second key
+;	EFM8_JDY40_Receiver.c:24: WDTCN = 0xAD; //Second key
 	mov	_WDTCN,#0xAD
-;	EFM8_JDY40_Transmitter.c:416: VDM0CN=0x80;       // enable VDD monitor
+;	EFM8_JDY40_Receiver.c:26: VDM0CN=0x80;       // enable VDD monitor
 	mov	_VDM0CN,#0x80
-;	EFM8_JDY40_Transmitter.c:417: RSTSRC=0x02|0x04;  // Enable reset on missing clock detector and VDD
+;	EFM8_JDY40_Receiver.c:27: RSTSRC=0x02|0x04;  // Enable reset on missing clock detector and VDD
 	mov	_RSTSRC,#0x06
-;	EFM8_JDY40_Transmitter.c:424: SFRPAGE = 0x10;
+;	EFM8_JDY40_Receiver.c:34: SFRPAGE = 0x10;
 	mov	_SFRPAGE,#0x10
-;	EFM8_JDY40_Transmitter.c:425: PFE0CN  = 0x20; // SYSCLK < 75 MHz.
+;	EFM8_JDY40_Receiver.c:35: PFE0CN  = 0x20; // SYSCLK < 75 MHz.
 	mov	_PFE0CN,#0x20
-;	EFM8_JDY40_Transmitter.c:426: SFRPAGE = 0x00;
+;	EFM8_JDY40_Receiver.c:36: SFRPAGE = 0x00;
 	mov	_SFRPAGE,#0x00
-;	EFM8_JDY40_Transmitter.c:447: CLKSEL = 0x00;
+;	EFM8_JDY40_Receiver.c:57: CLKSEL = 0x00;
 	mov	_CLKSEL,#0x00
-;	EFM8_JDY40_Transmitter.c:448: CLKSEL = 0x00;
+;	EFM8_JDY40_Receiver.c:58: CLKSEL = 0x00;
 	mov	_CLKSEL,#0x00
-;	EFM8_JDY40_Transmitter.c:449: while ((CLKSEL & 0x80) == 0);
+;	EFM8_JDY40_Receiver.c:59: while ((CLKSEL & 0x80) == 0);
 L002001?:
 	mov	a,_CLKSEL
 	jnb	acc.7,L002001?
-;	EFM8_JDY40_Transmitter.c:450: CLKSEL = 0x03;
+;	EFM8_JDY40_Receiver.c:60: CLKSEL = 0x03;
 	mov	_CLKSEL,#0x03
-;	EFM8_JDY40_Transmitter.c:451: CLKSEL = 0x03;
+;	EFM8_JDY40_Receiver.c:61: CLKSEL = 0x03;
 	mov	_CLKSEL,#0x03
-;	EFM8_JDY40_Transmitter.c:452: while ((CLKSEL & 0x80) == 0);
+;	EFM8_JDY40_Receiver.c:62: while ((CLKSEL & 0x80) == 0);
 L002004?:
 	mov	a,_CLKSEL
 	jnb	acc.7,L002004?
-;	EFM8_JDY40_Transmitter.c:457: P0MDOUT |= 0x11; // Enable UART0 TX (P0.4) and UART1 TX (P0.0) as push-pull outputs
+;	EFM8_JDY40_Receiver.c:67: P0MDOUT |= 0x11; // Enable UART0 TX (P0.4) and UART1 TX (P0.0) as push-pull outputs
 	orl	_P0MDOUT,#0x11
-;	EFM8_JDY40_Transmitter.c:458: P2MDOUT |= 0x01; // P2.0 in push-pull mode
+;	EFM8_JDY40_Receiver.c:68: P2MDOUT |= 0x01; // P2.0 in push-pull mode
 	orl	_P2MDOUT,#0x01
-;	EFM8_JDY40_Transmitter.c:459: XBR0     = 0x01; // Enable UART0 on P0.4(TX) and P0.5(RX)                     
+;	EFM8_JDY40_Receiver.c:69: XBR0     = 0x01; // Enable UART0 on P0.4(TX) and P0.5(RX)                     
 	mov	_XBR0,#0x01
-;	EFM8_JDY40_Transmitter.c:460: XBR1     = 0X00;
+;	EFM8_JDY40_Receiver.c:70: XBR1     = 0X00;
 	mov	_XBR1,#0x00
-;	EFM8_JDY40_Transmitter.c:461: XBR2     = 0x41; // Enable crossbar and uart 1
+;	EFM8_JDY40_Receiver.c:71: XBR2     = 0x41; // Enable crossbar and uart 1
 	mov	_XBR2,#0x41
-;	EFM8_JDY40_Transmitter.c:467: SCON0 = 0x10;
+;	EFM8_JDY40_Receiver.c:77: SCON0 = 0x10;
 	mov	_SCON0,#0x10
-;	EFM8_JDY40_Transmitter.c:468: TH1 = 0x100-((SYSCLK/BAUDRATE)/(2L*12L));
+;	EFM8_JDY40_Receiver.c:78: TH1 = 0x100-((SYSCLK/BAUDRATE)/(2L*12L));
 	mov	_TH1,#0xE6
-;	EFM8_JDY40_Transmitter.c:469: TL1 = TH1;      // Init Timer1
+;	EFM8_JDY40_Receiver.c:79: TL1 = TH1;      // Init Timer1
 	mov	_TL1,_TH1
-;	EFM8_JDY40_Transmitter.c:470: TMOD &= ~0xf0;  // TMOD: timer 1 in 8-bit auto-reload
+;	EFM8_JDY40_Receiver.c:80: TMOD &= ~0xf0;  // TMOD: timer 1 in 8-bit auto-reload
 	anl	_TMOD,#0x0F
-;	EFM8_JDY40_Transmitter.c:471: TMOD |=  0x20;                       
+;	EFM8_JDY40_Receiver.c:81: TMOD |=  0x20;                       
 	orl	_TMOD,#0x20
-;	EFM8_JDY40_Transmitter.c:472: TR1 = 1; // START Timer1
+;	EFM8_JDY40_Receiver.c:82: TR1 = 1; // START Timer1
 	setb	_TR1
-;	EFM8_JDY40_Transmitter.c:473: TI = 1;  // Indicate TX0 ready
+;	EFM8_JDY40_Receiver.c:83: TI = 1;  // Indicate TX0 ready
 	setb	_TI
-;	EFM8_JDY40_Transmitter.c:475: return 0;
+;	EFM8_JDY40_Receiver.c:86: SFRPAGE=0x10;
+	mov	_SFRPAGE,#0x10
+;	EFM8_JDY40_Receiver.c:87: TMR5CN0=0x00;
+	mov	_TMR5CN0,#0x00
+;	EFM8_JDY40_Receiver.c:88: pwm_reload=0x10000L-(SYSCLK*1.5e-3)/12.0; // 1.5 miliseconds pulse is the center of the servo
+	mov	_pwm_reload,#0xD8
+	mov	(_pwm_reload + 1),#0xDC
+;	EFM8_JDY40_Receiver.c:89: TMR5=0xffff;   // Set to reload immediately
+	mov	_TMR5,#0xFF
+	mov	(_TMR5 >> 8),#0xFF
+;	EFM8_JDY40_Receiver.c:90: EIE2|=0b_0000_1000; // Enable Timer5 interrupts
+	orl	_EIE2,#0x08
+;	EFM8_JDY40_Receiver.c:91: TR5=1;         // Start Timer5 (TMR5CN0 is bit addressable)
+	setb	_TR5
+;	EFM8_JDY40_Receiver.c:93: EA=1;
+	setb	_EA
+;	EFM8_JDY40_Receiver.c:95: SFRPAGE=0x00;
+	mov	_SFRPAGE,#0x00
+;	EFM8_JDY40_Receiver.c:97: return 0;
 	mov	dpl,#0x00
 	ret
 ;------------------------------------------------------------
-;Allocation info for local variables in function 'InitADC'
+;Allocation info for local variables in function 'Timer5_ISR'
 ;------------------------------------------------------------
 ;------------------------------------------------------------
-;	EFM8_JDY40_Transmitter.c:478: void InitADC (void)
+;	EFM8_JDY40_Receiver.c:101: void Timer5_ISR (void) interrupt INTERRUPT_TIMER5
 ;	-----------------------------------------
-;	 function InitADC
+;	 function Timer5_ISR
 ;	-----------------------------------------
-_InitADC:
-;	EFM8_JDY40_Transmitter.c:480: SFRPAGE = 0x00;
-	mov	_SFRPAGE,#0x00
-;	EFM8_JDY40_Transmitter.c:481: ADEN=0; // Disable ADC
-	clr	_ADEN
-;	EFM8_JDY40_Transmitter.c:486: (0x0 << 0) ; // Accumulate n conversions: 0x0: 1, 0x1:4, 0x2:8, 0x3:16, 0x4:32
-	mov	_ADC0CN1,#0x80
-;	EFM8_JDY40_Transmitter.c:490: (0x0 << 2); // 0:SYSCLK ADCCLK = SYSCLK. 1:HFOSC0 ADCCLK = HFOSC0.
-	mov	_ADC0CF0,#0x20
-;	EFM8_JDY40_Transmitter.c:494: (0x1E << 0); // Conversion Tracking Time. Tadtk = ADTK / (Fsarclk)
-	mov	_ADC0CF1,#0x1E
-;	EFM8_JDY40_Transmitter.c:503: (0x0 << 0) ; // TEMPE. 0: Disable the Temperature Sensor. 1: Enable the Temperature Sensor.
-	mov	_ADC0CN0,#0x00
-;	EFM8_JDY40_Transmitter.c:508: (0x1F << 0); // ADPWR. Power Up Delay Time. Tpwrtime = ((4 * (ADPWR + 1)) + 2) / (Fadcclk)
-	mov	_ADC0CF2,#0x3F
-;	EFM8_JDY40_Transmitter.c:512: (0x0 << 0) ; // ADCM. 0x0: ADBUSY, 0x1: TIMER0, 0x2: TIMER2, 0x3: TIMER3, 0x4: CNVSTR, 0x5: CEX5, 0x6: TIMER4, 0x7: TIMER5, 0x8: CLU0, 0x9: CLU1, 0xA: CLU2, 0xB: CLU3
-	mov	_ADC0CN2,#0x00
-;	EFM8_JDY40_Transmitter.c:514: ADEN=1; // Enable ADC
-	setb	_ADEN
-	ret
-;------------------------------------------------------------
-;Allocation info for local variables in function 'TIMER0_Init'
-;------------------------------------------------------------
-;------------------------------------------------------------
-;	EFM8_JDY40_Transmitter.c:517: void TIMER0_Init(void)
-;	-----------------------------------------
-;	 function TIMER0_Init
-;	-----------------------------------------
-_TIMER0_Init:
-;	EFM8_JDY40_Transmitter.c:519: TMOD&=0b_1111_0000; // Set the bits of Timer/Counter 0 to zero
-	anl	_TMOD,#0xF0
-;	EFM8_JDY40_Transmitter.c:520: TMOD|=0b_0000_0001; // Timer/Counter 0 used as a 16-bit timer
-	orl	_TMOD,#0x01
-;	EFM8_JDY40_Transmitter.c:521: TR0=0; // Stop Timer/Counter 0
-	clr	_TR0
-	ret
+_Timer5_ISR:
+	push	acc
+	push	ar2
+	push	ar3
+	push	ar4
+	push	ar5
+	push	psw
+	mov	psw,#0x00
+;	EFM8_JDY40_Receiver.c:103: SFRPAGE=0x10;
+	mov	_SFRPAGE,#0x10
+;	EFM8_JDY40_Receiver.c:104: TF5H = 0; // Clear Timer5 interrupt flag
+	clr	_TF5H
+;	EFM8_JDY40_Receiver.c:108: switch (pwm_state)
+	mov	r2,_pwm_state
+	cjne	r2,#0x00,L003009?
+	sjmp	L003001?
+L003009?:
+;	EFM8_JDY40_Receiver.c:114: case 0:
+	cjne	r2,#0x01,L003003?
+	sjmp	L003002?
+L003001?:
+;	EFM8_JDY40_Receiver.c:115: ESCOUT=1;
+	setb	_P1_7
+;	EFM8_JDY40_Receiver.c:116: TMR5RL=RELOAD_10MS;
+	mov	_TMR5RL,#0xA0
+	mov	(_TMR5RL >> 8),#0x15
+;	EFM8_JDY40_Receiver.c:117: pwm_state=1;
+	mov	_pwm_state,#0x01
+;	EFM8_JDY40_Receiver.c:118: count20ms++;
+	inc	_count20ms
+;	EFM8_JDY40_Receiver.c:119: break;
+;	EFM8_JDY40_Receiver.c:121: case 1:
+	sjmp	L003005?
+L003002?:
+;	EFM8_JDY40_Receiver.c:122: ESCOUT=0;
+	clr	_P1_7
+;	EFM8_JDY40_Receiver.c:123: TMR5RL=RELOAD_10MS-pwm_reload;
+	mov	r2,_pwm_reload
+	mov	r3,(_pwm_reload + 1)
+	clr	a
+	mov	r4,a
+	mov	r5,a
+	mov	a,#0xA0
+	clr	c
+	subb	a,r2
+	mov	r2,a
+	mov	a,#0x15
+	subb	a,r3
+	mov	r3,a
+	clr	a
+	subb	a,r4
+	mov	r4,a
+	clr	a
+	subb	a,r5
+	mov	r5,a
+	mov	_TMR5RL,r2
+	mov	(_TMR5RL >> 8),r3
+;	EFM8_JDY40_Receiver.c:124: pwm_state=2;
+	mov	_pwm_state,#0x02
+;	EFM8_JDY40_Receiver.c:125: break;
+;	EFM8_JDY40_Receiver.c:127: default:
+	sjmp	L003005?
+L003003?:
+;	EFM8_JDY40_Receiver.c:128: ESCOUT=0;
+	clr	_P1_7
+;	EFM8_JDY40_Receiver.c:129: TMR5RL=pwm_reload;
+	mov	_TMR5RL,_pwm_reload
+	mov	(_TMR5RL >> 8),(_pwm_reload + 1)
+;	EFM8_JDY40_Receiver.c:130: pwm_state=0;
+	mov	_pwm_state,#0x00
+;	EFM8_JDY40_Receiver.c:132: }
+L003005?:
+	pop	psw
+	pop	ar5
+	pop	ar4
+	pop	ar3
+	pop	ar2
+	pop	acc
+	reti
+;	eliminated unneeded push/pop dpl
+;	eliminated unneeded push/pop dph
+;	eliminated unneeded push/pop b
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'Timer3us'
 ;------------------------------------------------------------
 ;us                        Allocated to registers r2 
 ;i                         Allocated to registers r3 
 ;------------------------------------------------------------
-;	EFM8_JDY40_Transmitter.c:525: void Timer3us(unsigned char us)
+;	EFM8_JDY40_Receiver.c:136: void Timer3us(unsigned char us)
 ;	-----------------------------------------
 ;	 function Timer3us
 ;	-----------------------------------------
 _Timer3us:
 	mov	r2,dpl
-;	EFM8_JDY40_Transmitter.c:530: CKCON0|=0b_0100_0000;
+;	EFM8_JDY40_Receiver.c:141: CKCON0|=0b_0100_0000;
 	orl	_CKCON0,#0x40
-;	EFM8_JDY40_Transmitter.c:532: TMR3RL = (-(SYSCLK)/1000000L); // Set Timer3 to overflow in 1us.
+;	EFM8_JDY40_Receiver.c:143: TMR3RL = (-(SYSCLK)/1000000L); // Set Timer3 to overflow in 1us.
 	mov	_TMR3RL,#0xB8
 	mov	(_TMR3RL >> 8),#0xFF
-;	EFM8_JDY40_Transmitter.c:533: TMR3 = TMR3RL;                 // Initialize Timer3 for first overflow
+;	EFM8_JDY40_Receiver.c:144: TMR3 = TMR3RL;                 // Initialize Timer3 for first overflow
 	mov	_TMR3,_TMR3RL
 	mov	(_TMR3 >> 8),(_TMR3RL >> 8)
-;	EFM8_JDY40_Transmitter.c:535: TMR3CN0 = 0x04;                 // Sart Timer3 and clear overflow flag
+;	EFM8_JDY40_Receiver.c:146: TMR3CN0 = 0x04;                 // Sart Timer3 and clear overflow flag
 	mov	_TMR3CN0,#0x04
-;	EFM8_JDY40_Transmitter.c:536: for (i = 0; i < us; i++)       // Count <us> overflows
+;	EFM8_JDY40_Receiver.c:147: for (i = 0; i < us; i++)       // Count <us> overflows
 	mov	r3,#0x00
-L005004?:
+L004004?:
 	clr	c
 	mov	a,r3
 	subb	a,r2
-	jnc	L005007?
-;	EFM8_JDY40_Transmitter.c:538: while (!(TMR3CN0 & 0x80));  // Wait for overflow
-L005001?:
+	jnc	L004007?
+;	EFM8_JDY40_Receiver.c:149: while (!(TMR3CN0 & 0x80));  // Wait for overflow
+L004001?:
 	mov	a,_TMR3CN0
-	jnb	acc.7,L005001?
-;	EFM8_JDY40_Transmitter.c:539: TMR3CN0 &= ~(0x80);         // Clear overflow indicator
+	jnb	acc.7,L004001?
+;	EFM8_JDY40_Receiver.c:150: TMR3CN0 &= ~(0x80);         // Clear overflow indicator
 	anl	_TMR3CN0,#0x7F
-;	EFM8_JDY40_Transmitter.c:536: for (i = 0; i < us; i++)       // Count <us> overflows
+;	EFM8_JDY40_Receiver.c:147: for (i = 0; i < us; i++)       // Count <us> overflows
 	inc	r3
-	sjmp	L005004?
-L005007?:
-;	EFM8_JDY40_Transmitter.c:541: TMR3CN0 = 0 ;                   // Stop Timer3 and clear overflow flag
+	sjmp	L004004?
+L004007?:
+;	EFM8_JDY40_Receiver.c:152: TMR3CN0 = 0 ;                   // Stop Timer3 and clear overflow flag
 	mov	_TMR3CN0,#0x00
 	ret
 ;------------------------------------------------------------
@@ -724,29 +804,29 @@ L005007?:
 ;j                         Allocated to registers r4 r5 
 ;k                         Allocated to registers r6 
 ;------------------------------------------------------------
-;	EFM8_JDY40_Transmitter.c:544: void waitms (unsigned int ms)
+;	EFM8_JDY40_Receiver.c:155: void waitms (unsigned int ms)
 ;	-----------------------------------------
 ;	 function waitms
 ;	-----------------------------------------
 _waitms:
 	mov	r2,dpl
 	mov	r3,dph
-;	EFM8_JDY40_Transmitter.c:548: for(j=0; j<ms; j++)
+;	EFM8_JDY40_Receiver.c:159: for(j=0; j<ms; j++)
 	mov	r4,#0x00
 	mov	r5,#0x00
-L006005?:
+L005005?:
 	clr	c
 	mov	a,r4
 	subb	a,r2
 	mov	a,r5
 	subb	a,r3
-	jnc	L006009?
-;	EFM8_JDY40_Transmitter.c:549: for (k=0; k<4; k++) Timer3us(250);
+	jnc	L005009?
+;	EFM8_JDY40_Receiver.c:160: for (k=0; k<4; k++) Timer3us(250);
 	mov	r6,#0x00
-L006001?:
-	cjne	r6,#0x04,L006018?
-L006018?:
-	jnc	L006007?
+L005001?:
+	cjne	r6,#0x04,L005018?
+L005018?:
+	jnc	L005007?
 	mov	dpl,#0xFA
 	push	ar2
 	push	ar3
@@ -760,269 +840,21 @@ L006018?:
 	pop	ar3
 	pop	ar2
 	inc	r6
-	sjmp	L006001?
-L006007?:
-;	EFM8_JDY40_Transmitter.c:548: for(j=0; j<ms; j++)
+	sjmp	L005001?
+L005007?:
+;	EFM8_JDY40_Receiver.c:159: for(j=0; j<ms; j++)
 	inc	r4
-	cjne	r4,#0x00,L006005?
+	cjne	r4,#0x00,L005005?
 	inc	r5
-	sjmp	L006005?
-L006009?:
-	ret
-;------------------------------------------------------------
-;Allocation info for local variables in function 'InitPinADC'
-;------------------------------------------------------------
-;pinno                     Allocated with name '_InitPinADC_PARM_2'
-;portno                    Allocated to registers r2 
-;mask                      Allocated to registers r3 
-;------------------------------------------------------------
-;	EFM8_JDY40_Transmitter.c:554: void InitPinADC (unsigned char portno, unsigned char pinno)
-;	-----------------------------------------
-;	 function InitPinADC
-;	-----------------------------------------
-_InitPinADC:
-	mov	r2,dpl
-;	EFM8_JDY40_Transmitter.c:558: mask=1<<pinno;
-	mov	b,_InitPinADC_PARM_2
-	inc	b
-	mov	a,#0x01
-	sjmp	L007013?
-L007011?:
-	add	a,acc
-L007013?:
-	djnz	b,L007011?
-	mov	r3,a
-;	EFM8_JDY40_Transmitter.c:560: SFRPAGE = 0x20;
-	mov	_SFRPAGE,#0x20
-;	EFM8_JDY40_Transmitter.c:561: switch (portno)
-	cjne	r2,#0x00,L007014?
-	sjmp	L007001?
-L007014?:
-	cjne	r2,#0x01,L007015?
-	sjmp	L007002?
-L007015?:
-;	EFM8_JDY40_Transmitter.c:563: case 0:
-	cjne	r2,#0x02,L007005?
-	sjmp	L007003?
-L007001?:
-;	EFM8_JDY40_Transmitter.c:564: P0MDIN &= (~mask); // Set pin as analog input
-	mov	a,r3
-	cpl	a
-	mov	r2,a
-	anl	_P0MDIN,a
-;	EFM8_JDY40_Transmitter.c:565: P0SKIP |= mask; // Skip Crossbar decoding for this pin
-	mov	a,r3
-	orl	_P0SKIP,a
-;	EFM8_JDY40_Transmitter.c:566: break;
-;	EFM8_JDY40_Transmitter.c:567: case 1:
-	sjmp	L007005?
-L007002?:
-;	EFM8_JDY40_Transmitter.c:568: P1MDIN &= (~mask); // Set pin as analog input
-	mov	a,r3
-	cpl	a
-	mov	r2,a
-	anl	_P1MDIN,a
-;	EFM8_JDY40_Transmitter.c:569: P1SKIP |= mask; // Skip Crossbar decoding for this pin
-	mov	a,r3
-	orl	_P1SKIP,a
-;	EFM8_JDY40_Transmitter.c:570: break;
-;	EFM8_JDY40_Transmitter.c:571: case 2:
-	sjmp	L007005?
-L007003?:
-;	EFM8_JDY40_Transmitter.c:572: P2MDIN &= (~mask); // Set pin as analog input
-	mov	a,r3
-	cpl	a
-	mov	r2,a
-	anl	_P2MDIN,a
-;	EFM8_JDY40_Transmitter.c:573: P2SKIP |= mask; // Skip Crossbar decoding for this pin
-	mov	a,r3
-	orl	_P2SKIP,a
-;	EFM8_JDY40_Transmitter.c:577: }
-L007005?:
-;	EFM8_JDY40_Transmitter.c:578: SFRPAGE = 0x00;
-	mov	_SFRPAGE,#0x00
-	ret
-;------------------------------------------------------------
-;Allocation info for local variables in function 'Get_ADC'
-;------------------------------------------------------------
-;------------------------------------------------------------
-;	EFM8_JDY40_Transmitter.c:581: unsigned int Get_ADC (void)
-;	-----------------------------------------
-;	 function Get_ADC
-;	-----------------------------------------
-_Get_ADC:
-;	EFM8_JDY40_Transmitter.c:583: ADINT = 0;
-	clr	_ADINT
-;	EFM8_JDY40_Transmitter.c:584: ADBUSY = 1;
-	setb	_ADBUSY
-;	EFM8_JDY40_Transmitter.c:585: while (!ADINT); // Wait for conversion to complete
-L008001?:
-	jnb	_ADINT,L008001?
-;	EFM8_JDY40_Transmitter.c:586: return (ADC0);
-	mov	dpl,_ADC0
-	mov	dph,(_ADC0 >> 8)
-	ret
-;------------------------------------------------------------
-;Allocation info for local variables in function 'ADC_at_Pin'
-;------------------------------------------------------------
-;pin                       Allocated to registers 
-;------------------------------------------------------------
-;	EFM8_JDY40_Transmitter.c:589: unsigned int ADC_at_Pin(unsigned char pin)
-;	-----------------------------------------
-;	 function ADC_at_Pin
-;	-----------------------------------------
-_ADC_at_Pin:
-	mov	_ADC0MX,dpl
-;	EFM8_JDY40_Transmitter.c:592: ADINT = 0;
-	clr	_ADINT
-;	EFM8_JDY40_Transmitter.c:593: ADBUSY = 1;     // Convert voltage at the pin
-	setb	_ADBUSY
-;	EFM8_JDY40_Transmitter.c:594: while (!ADINT); // Wait for conversion to complete
-L009001?:
-	jnb	_ADINT,L009001?
-;	EFM8_JDY40_Transmitter.c:595: return (ADC0);
-	mov	dpl,_ADC0
-	mov	dph,(_ADC0 >> 8)
-	ret
-;------------------------------------------------------------
-;Allocation info for local variables in function 'Volts_at_Pin'
-;------------------------------------------------------------
-;pin                       Allocated to registers r2 
-;------------------------------------------------------------
-;	EFM8_JDY40_Transmitter.c:598: float Volts_at_Pin(unsigned char pin)
-;	-----------------------------------------
-;	 function Volts_at_Pin
-;	-----------------------------------------
-_Volts_at_Pin:
-;	EFM8_JDY40_Transmitter.c:600: return ((ADC_at_Pin(pin)*VDD)/16383.0);
-	lcall	_ADC_at_Pin
-	lcall	___uint2fs
-	mov	r2,dpl
-	mov	r3,dph
-	mov	r4,b
-	mov	r5,a
-	push	ar2
-	push	ar3
-	push	ar4
-	push	ar5
-	mov	dptr,#0x0000
-	mov	b,#0xA0
-	mov	a,#0x40
-	lcall	___fsmul
-	mov	r2,dpl
-	mov	r3,dph
-	mov	r4,b
-	mov	r5,a
-	mov	a,sp
-	add	a,#0xfc
-	mov	sp,a
-	clr	a
-	push	acc
-	mov	a,#0xFC
-	push	acc
-	mov	a,#0x7F
-	push	acc
-	mov	a,#0x46
-	push	acc
-	mov	dpl,r2
-	mov	dph,r3
-	mov	b,r4
-	mov	a,r5
-	lcall	___fsdiv
-	mov	r2,dpl
-	mov	r3,dph
-	mov	r4,b
-	mov	r5,a
-	mov	a,sp
-	add	a,#0xfc
-	mov	sp,a
-	mov	dpl,r2
-	mov	dph,r3
-	mov	b,r4
-	mov	a,r5
-	ret
-;------------------------------------------------------------
-;Allocation info for local variables in function 'throttle_control_ADC'
-;------------------------------------------------------------
-;pin                       Allocated to registers r2 
-;throttle_ADC              Allocated to registers r2 r3 
-;------------------------------------------------------------
-;	EFM8_JDY40_Transmitter.c:603: float throttle_control_ADC(unsigned char pin)
-;	-----------------------------------------
-;	 function throttle_control_ADC
-;	-----------------------------------------
-_throttle_control_ADC:
-;	EFM8_JDY40_Transmitter.c:606: throttle_ADC = ADC_at_Pin(pin);
-	lcall	_ADC_at_Pin
-	mov	r2,dpl
-	mov	r3,dph
-;	EFM8_JDY40_Transmitter.c:608: if(throttle_ADC < 16383/5){
-	clr	c
-	mov	a,r2
-	subb	a,#0xCC
-	mov	a,r3
-	subb	a,#0x0C
-	jnc	L011002?
-;	EFM8_JDY40_Transmitter.c:609: return 1.0;
-	mov	dptr,#0x0000
-	mov	b,#0x80
-	mov	a,#0x3F
-	ret
-L011002?:
-;	EFM8_JDY40_Transmitter.c:611: return ((throttle_ADC*VDD)/16383.0);
-	mov	dpl,r2
-	mov	dph,r3
-	lcall	___uint2fs
-	mov	r2,dpl
-	mov	r3,dph
-	mov	r4,b
-	mov	r5,a
-	push	ar2
-	push	ar3
-	push	ar4
-	push	ar5
-	mov	dptr,#0x0000
-	mov	b,#0xA0
-	mov	a,#0x40
-	lcall	___fsmul
-	mov	r2,dpl
-	mov	r3,dph
-	mov	r4,b
-	mov	r5,a
-	mov	a,sp
-	add	a,#0xfc
-	mov	sp,a
-	clr	a
-	push	acc
-	mov	a,#0xFC
-	push	acc
-	mov	a,#0x7F
-	push	acc
-	mov	a,#0x46
-	push	acc
-	mov	dpl,r2
-	mov	dph,r3
-	mov	b,r4
-	mov	a,r5
-	lcall	___fsdiv
-	mov	r2,dpl
-	mov	r3,dph
-	mov	r4,b
-	mov	r5,a
-	mov	a,sp
-	add	a,#0xfc
-	mov	sp,a
-	mov	dpl,r2
-	mov	dph,r3
-	mov	b,r4
-	mov	a,r5
+	sjmp	L005005?
+L005009?:
 	ret
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'UART1_Init'
 ;------------------------------------------------------------
 ;baudrate                  Allocated to registers r2 r3 r4 r5 
 ;------------------------------------------------------------
-;	EFM8_JDY40_Transmitter.c:615: void UART1_Init (unsigned long baudrate)
+;	EFM8_JDY40_Receiver.c:163: void UART1_Init (unsigned long baudrate)
 ;	-----------------------------------------
 ;	 function UART1_Init
 ;	-----------------------------------------
@@ -1031,15 +863,15 @@ _UART1_Init:
 	mov	r3,dph
 	mov	r4,b
 	mov	r5,a
-;	EFM8_JDY40_Transmitter.c:617: SFRPAGE = 0x20;
+;	EFM8_JDY40_Receiver.c:165: SFRPAGE = 0x20;
 	mov	_SFRPAGE,#0x20
-;	EFM8_JDY40_Transmitter.c:618: SMOD1 = 0x0C; // no parity, 8 data bits, 1 stop bit
+;	EFM8_JDY40_Receiver.c:166: SMOD1 = 0x0C; // no parity, 8 data bits, 1 stop bit
 	mov	_SMOD1,#0x0C
-;	EFM8_JDY40_Transmitter.c:619: SCON1 = 0x10;
+;	EFM8_JDY40_Receiver.c:167: SCON1 = 0x10;
 	mov	_SCON1,#0x10
-;	EFM8_JDY40_Transmitter.c:620: SBCON1 =0x00;   // disable baud rate generator
+;	EFM8_JDY40_Receiver.c:168: SBCON1 =0x00;   // disable baud rate generator
 	mov	_SBCON1,#0x00
-;	EFM8_JDY40_Transmitter.c:621: SBRL1 = 0x10000L-((SYSCLK/baudrate)/(12L*2L));
+;	EFM8_JDY40_Receiver.c:169: SBRL1 = 0x10000L-((SYSCLK/baudrate)/(12L*2L));
 	mov	__divulong_PARM_2,r2
 	mov	(__divulong_PARM_2 + 1),r3
 	mov	(__divulong_PARM_2 + 2),r4
@@ -1079,11 +911,11 @@ _UART1_Init:
 	subb	a,r5
 	mov	_SBRL1,r2
 	mov	(_SBRL1 >> 8),r3
-;	EFM8_JDY40_Transmitter.c:622: TI1 = 1; // indicate ready for TX
+;	EFM8_JDY40_Receiver.c:170: TI1 = 1; // indicate ready for TX
 	setb	_TI1
-;	EFM8_JDY40_Transmitter.c:623: SBCON1 |= 0x40;   // enable baud rate generator
+;	EFM8_JDY40_Receiver.c:171: SBCON1 |= 0x40;   // enable baud rate generator
 	orl	_SBCON1,#0x40
-;	EFM8_JDY40_Transmitter.c:624: SFRPAGE = 0x00;
+;	EFM8_JDY40_Receiver.c:172: SFRPAGE = 0x00;
 	mov	_SFRPAGE,#0x00
 	ret
 ;------------------------------------------------------------
@@ -1091,23 +923,23 @@ _UART1_Init:
 ;------------------------------------------------------------
 ;c                         Allocated to registers r2 
 ;------------------------------------------------------------
-;	EFM8_JDY40_Transmitter.c:627: void putchar1 (char c) 
+;	EFM8_JDY40_Receiver.c:175: void putchar1 (char c) 
 ;	-----------------------------------------
 ;	 function putchar1
 ;	-----------------------------------------
 _putchar1:
 	mov	r2,dpl
-;	EFM8_JDY40_Transmitter.c:629: SFRPAGE = 0x20;
+;	EFM8_JDY40_Receiver.c:177: SFRPAGE = 0x20;
 	mov	_SFRPAGE,#0x20
-;	EFM8_JDY40_Transmitter.c:630: while (!TI1);
-L013001?:
-;	EFM8_JDY40_Transmitter.c:631: TI1=0;
-	jbc	_TI1,L013008?
-	sjmp	L013001?
-L013008?:
-;	EFM8_JDY40_Transmitter.c:632: SBUF1 = c;
+;	EFM8_JDY40_Receiver.c:178: while (!TI1);
+L007001?:
+;	EFM8_JDY40_Receiver.c:179: TI1=0;
+	jbc	_TI1,L007008?
+	sjmp	L007001?
+L007008?:
+;	EFM8_JDY40_Receiver.c:180: SBUF1 = c;
 	mov	_SBUF1,r2
-;	EFM8_JDY40_Transmitter.c:633: SFRPAGE = 0x00;
+;	EFM8_JDY40_Receiver.c:181: SFRPAGE = 0x00;
 	mov	_SFRPAGE,#0x00
 	ret
 ;------------------------------------------------------------
@@ -1115,7 +947,7 @@ L013008?:
 ;------------------------------------------------------------
 ;s                         Allocated to registers r2 r3 r4 
 ;------------------------------------------------------------
-;	EFM8_JDY40_Transmitter.c:636: void sendstr1 (char * s)
+;	EFM8_JDY40_Receiver.c:184: void sendstr1 (char * s)
 ;	-----------------------------------------
 ;	 function sendstr1
 ;	-----------------------------------------
@@ -1123,15 +955,15 @@ _sendstr1:
 	mov	r2,dpl
 	mov	r3,dph
 	mov	r4,b
-;	EFM8_JDY40_Transmitter.c:638: while(*s)
-L014001?:
+;	EFM8_JDY40_Receiver.c:186: while(*s)
+L008001?:
 	mov	dpl,r2
 	mov	dph,r3
 	mov	b,r4
 	lcall	__gptrget
 	mov	r5,a
-	jz	L014004?
-;	EFM8_JDY40_Transmitter.c:640: putchar1(*s);
+	jz	L008004?
+;	EFM8_JDY40_Receiver.c:188: putchar1(*s);
 	mov	dpl,r5
 	push	ar2
 	push	ar3
@@ -1140,38 +972,38 @@ L014001?:
 	pop	ar4
 	pop	ar3
 	pop	ar2
-;	EFM8_JDY40_Transmitter.c:641: s++;	
+;	EFM8_JDY40_Receiver.c:189: s++;	
 	inc	r2
-	cjne	r2,#0x00,L014001?
+	cjne	r2,#0x00,L008001?
 	inc	r3
-	sjmp	L014001?
-L014004?:
+	sjmp	L008001?
+L008004?:
 	ret
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'getchar1'
 ;------------------------------------------------------------
 ;c                         Allocated to registers 
 ;------------------------------------------------------------
-;	EFM8_JDY40_Transmitter.c:645: char getchar1 (void)
+;	EFM8_JDY40_Receiver.c:193: char getchar1 (void)
 ;	-----------------------------------------
 ;	 function getchar1
 ;	-----------------------------------------
 _getchar1:
-;	EFM8_JDY40_Transmitter.c:648: SFRPAGE = 0x20;
+;	EFM8_JDY40_Receiver.c:196: SFRPAGE = 0x20;
 	mov	_SFRPAGE,#0x20
-;	EFM8_JDY40_Transmitter.c:649: while (!RI1);
-L015001?:
-;	EFM8_JDY40_Transmitter.c:650: RI1=0;
-	jbc	_RI1,L015008?
-	sjmp	L015001?
-L015008?:
-;	EFM8_JDY40_Transmitter.c:652: SCON1&=0b_0011_1111;
+;	EFM8_JDY40_Receiver.c:197: while (!RI1);
+L009001?:
+;	EFM8_JDY40_Receiver.c:198: RI1=0;
+	jbc	_RI1,L009008?
+	sjmp	L009001?
+L009008?:
+;	EFM8_JDY40_Receiver.c:200: SCON1&=0b_0011_1111;
 	anl	_SCON1,#0x3F
-;	EFM8_JDY40_Transmitter.c:653: c = SBUF1;
+;	EFM8_JDY40_Receiver.c:201: c = SBUF1;
 	mov	dpl,_SBUF1
-;	EFM8_JDY40_Transmitter.c:654: SFRPAGE = 0x00;
+;	EFM8_JDY40_Receiver.c:202: SFRPAGE = 0x00;
 	mov	_SFRPAGE,#0x00
-;	EFM8_JDY40_Transmitter.c:655: return (c);
+;	EFM8_JDY40_Receiver.c:203: return (c);
 	ret
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'getchar1_with_timeout'
@@ -1179,52 +1011,52 @@ L015008?:
 ;c                         Allocated to registers 
 ;timeout                   Allocated to registers r2 r3 
 ;------------------------------------------------------------
-;	EFM8_JDY40_Transmitter.c:658: char getchar1_with_timeout (void)
+;	EFM8_JDY40_Receiver.c:206: char getchar1_with_timeout (void)
 ;	-----------------------------------------
 ;	 function getchar1_with_timeout
 ;	-----------------------------------------
 _getchar1_with_timeout:
-;	EFM8_JDY40_Transmitter.c:662: SFRPAGE = 0x20;
+;	EFM8_JDY40_Receiver.c:210: SFRPAGE = 0x20;
 	mov	_SFRPAGE,#0x20
-;	EFM8_JDY40_Transmitter.c:664: while (!RI1)
+;	EFM8_JDY40_Receiver.c:212: while (!RI1)
 	mov	r2,#0x00
 	mov	r3,#0x00
-L016003?:
-	jb	_RI1,L016005?
-;	EFM8_JDY40_Transmitter.c:666: SFRPAGE = 0x00;
+L010003?:
+	jb	_RI1,L010005?
+;	EFM8_JDY40_Receiver.c:214: SFRPAGE = 0x00;
 	mov	_SFRPAGE,#0x00
-;	EFM8_JDY40_Transmitter.c:667: Timer3us(20);
+;	EFM8_JDY40_Receiver.c:215: Timer3us(20);
 	mov	dpl,#0x14
 	push	ar2
 	push	ar3
 	lcall	_Timer3us
 	pop	ar3
 	pop	ar2
-;	EFM8_JDY40_Transmitter.c:668: SFRPAGE = 0x20;
+;	EFM8_JDY40_Receiver.c:216: SFRPAGE = 0x20;
 	mov	_SFRPAGE,#0x20
-;	EFM8_JDY40_Transmitter.c:669: timeout++;
+;	EFM8_JDY40_Receiver.c:217: timeout++;
 	inc	r2
-	cjne	r2,#0x00,L016012?
+	cjne	r2,#0x00,L010012?
 	inc	r3
-L016012?:
-;	EFM8_JDY40_Transmitter.c:670: if(timeout==25000)
-	cjne	r2,#0xA8,L016003?
-	cjne	r3,#0x61,L016003?
-;	EFM8_JDY40_Transmitter.c:672: SFRPAGE = 0x00;
+L010012?:
+;	EFM8_JDY40_Receiver.c:218: if(timeout==25000)
+	cjne	r2,#0xA8,L010003?
+	cjne	r3,#0x61,L010003?
+;	EFM8_JDY40_Receiver.c:220: SFRPAGE = 0x00;
 	mov	_SFRPAGE,#0x00
-;	EFM8_JDY40_Transmitter.c:673: return ('\n'); // Timeout after half second
+;	EFM8_JDY40_Receiver.c:221: return ('\n'); // Timeout after half second
 	mov	dpl,#0x0A
 	ret
-L016005?:
-;	EFM8_JDY40_Transmitter.c:676: RI1=0;
+L010005?:
+;	EFM8_JDY40_Receiver.c:224: RI1=0;
 	clr	_RI1
-;	EFM8_JDY40_Transmitter.c:678: SCON1&=0b_0011_1111;
+;	EFM8_JDY40_Receiver.c:226: SCON1&=0b_0011_1111;
 	anl	_SCON1,#0x3F
-;	EFM8_JDY40_Transmitter.c:679: c = SBUF1;
+;	EFM8_JDY40_Receiver.c:227: c = SBUF1;
 	mov	dpl,_SBUF1
-;	EFM8_JDY40_Transmitter.c:680: SFRPAGE = 0x00;
+;	EFM8_JDY40_Receiver.c:228: SFRPAGE = 0x00;
 	mov	_SFRPAGE,#0x00
-;	EFM8_JDY40_Transmitter.c:681: return (c);
+;	EFM8_JDY40_Receiver.c:229: return (c);
 	ret
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'getstr1'
@@ -1232,7 +1064,7 @@ L016005?:
 ;s                         Allocated to registers r2 r3 r4 
 ;c                         Allocated to registers r5 
 ;------------------------------------------------------------
-;	EFM8_JDY40_Transmitter.c:684: void getstr1 (char * s)
+;	EFM8_JDY40_Receiver.c:232: void getstr1 (char * s)
 ;	-----------------------------------------
 ;	 function getstr1
 ;	-----------------------------------------
@@ -1240,9 +1072,9 @@ _getstr1:
 	mov	r2,dpl
 	mov	r3,dph
 	mov	r4,b
-;	EFM8_JDY40_Transmitter.c:688: while(1)
-L017004?:
-;	EFM8_JDY40_Transmitter.c:690: c=getchar1_with_timeout();
+;	EFM8_JDY40_Receiver.c:236: while(1)
+L011004?:
+;	EFM8_JDY40_Receiver.c:238: c=getchar1_with_timeout();
 	push	ar2
 	push	ar3
 	push	ar4
@@ -1251,17 +1083,17 @@ L017004?:
 	pop	ar4
 	pop	ar3
 	pop	ar2
-;	EFM8_JDY40_Transmitter.c:691: if(c=='\n')
-	cjne	r5,#0x0A,L017002?
-;	EFM8_JDY40_Transmitter.c:693: *s=0;
+;	EFM8_JDY40_Receiver.c:239: if(c=='\n')
+	cjne	r5,#0x0A,L011002?
+;	EFM8_JDY40_Receiver.c:241: *s=0;
 	mov	dpl,r2
 	mov	dph,r3
 	mov	b,r4
 	clr	a
-;	EFM8_JDY40_Transmitter.c:694: return;
+;	EFM8_JDY40_Receiver.c:242: return;
 	ljmp	__gptrput
-L017002?:
-;	EFM8_JDY40_Transmitter.c:696: *s=c;
+L011002?:
+;	EFM8_JDY40_Receiver.c:244: *s=c;
 	mov	dpl,r2
 	mov	dph,r3
 	mov	b,r4
@@ -1270,24 +1102,24 @@ L017002?:
 	inc	dptr
 	mov	r2,dpl
 	mov	r3,dph
-;	EFM8_JDY40_Transmitter.c:697: s++;
-	sjmp	L017004?
+;	EFM8_JDY40_Receiver.c:245: s++;
+	sjmp	L011004?
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'RXU1'
 ;------------------------------------------------------------
 ;------------------------------------------------------------
-;	EFM8_JDY40_Transmitter.c:702: bit RXU1 (void)
+;	EFM8_JDY40_Receiver.c:250: bit RXU1 (void)
 ;	-----------------------------------------
 ;	 function RXU1
 ;	-----------------------------------------
 _RXU1:
-;	EFM8_JDY40_Transmitter.c:705: SFRPAGE = 0x20;
+;	EFM8_JDY40_Receiver.c:253: SFRPAGE = 0x20;
 	mov	_SFRPAGE,#0x20
-;	EFM8_JDY40_Transmitter.c:706: mybit=RI1;
+;	EFM8_JDY40_Receiver.c:254: mybit=RI1;
 	mov	c,_RI1
-;	EFM8_JDY40_Transmitter.c:707: SFRPAGE = 0x00;
+;	EFM8_JDY40_Receiver.c:255: SFRPAGE = 0x00;
 	mov	_SFRPAGE,#0x00
-;	EFM8_JDY40_Transmitter.c:708: return mybit;
+;	EFM8_JDY40_Receiver.c:256: return mybit;
 	ret
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'waitms_or_RI1'
@@ -1296,30 +1128,30 @@ _RXU1:
 ;j                         Allocated to registers r4 r5 
 ;k                         Allocated to registers r6 
 ;------------------------------------------------------------
-;	EFM8_JDY40_Transmitter.c:711: void waitms_or_RI1 (unsigned int ms)
+;	EFM8_JDY40_Receiver.c:259: void waitms_or_RI1 (unsigned int ms)
 ;	-----------------------------------------
 ;	 function waitms_or_RI1
 ;	-----------------------------------------
 _waitms_or_RI1:
 	mov	r2,dpl
 	mov	r3,dph
-;	EFM8_JDY40_Transmitter.c:715: for(j=0; j<ms; j++)
+;	EFM8_JDY40_Receiver.c:263: for(j=0; j<ms; j++)
 	mov	r4,#0x00
 	mov	r5,#0x00
-L019007?:
+L013007?:
 	clr	c
 	mov	a,r4
 	subb	a,r2
 	mov	a,r5
 	subb	a,r3
-	jnc	L019011?
-;	EFM8_JDY40_Transmitter.c:717: for (k=0; k<4; k++)
+	jnc	L013011?
+;	EFM8_JDY40_Receiver.c:265: for (k=0; k<4; k++)
 	mov	r6,#0x00
-L019003?:
-	cjne	r6,#0x04,L019019?
-L019019?:
-	jnc	L019009?
-;	EFM8_JDY40_Transmitter.c:719: if(RXU1()) return;
+L013003?:
+	cjne	r6,#0x04,L013019?
+L013019?:
+	jnc	L013009?
+;	EFM8_JDY40_Receiver.c:267: if(RXU1()) return;
 	push	ar2
 	push	ar3
 	push	ar4
@@ -1333,10 +1165,10 @@ L019019?:
 	pop	ar4
 	pop	ar3
 	pop	ar2
-	jz	L019002?
+	jz	L013002?
 	ret
-L019002?:
-;	EFM8_JDY40_Transmitter.c:720: Timer3us(250);
+L013002?:
+;	EFM8_JDY40_Receiver.c:268: Timer3us(250);
 	mov	dpl,#0xFA
 	push	ar2
 	push	ar3
@@ -1349,23 +1181,23 @@ L019002?:
 	pop	ar4
 	pop	ar3
 	pop	ar2
-;	EFM8_JDY40_Transmitter.c:717: for (k=0; k<4; k++)
+;	EFM8_JDY40_Receiver.c:265: for (k=0; k<4; k++)
 	inc	r6
-	sjmp	L019003?
-L019009?:
-;	EFM8_JDY40_Transmitter.c:715: for(j=0; j<ms; j++)
+	sjmp	L013003?
+L013009?:
+;	EFM8_JDY40_Receiver.c:263: for(j=0; j<ms; j++)
 	inc	r4
-	cjne	r4,#0x00,L019007?
+	cjne	r4,#0x00,L013007?
 	inc	r5
-	sjmp	L019007?
-L019011?:
+	sjmp	L013007?
+L013011?:
 	ret
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'SendATCommand'
 ;------------------------------------------------------------
 ;s                         Allocated to registers r2 r3 r4 
 ;------------------------------------------------------------
-;	EFM8_JDY40_Transmitter.c:725: void SendATCommand (char * s)
+;	EFM8_JDY40_Receiver.c:273: void SendATCommand (char * s)
 ;	-----------------------------------------
 ;	 function SendATCommand
 ;	-----------------------------------------
@@ -1373,7 +1205,7 @@ _SendATCommand:
 	mov	r2,dpl
 	mov	r3,dph
 	mov	r4,b
-;	EFM8_JDY40_Transmitter.c:727: printf("Command: %s", s);
+;	EFM8_JDY40_Receiver.c:275: printf("Command: %s", s);
 	push	ar2
 	push	ar3
 	push	ar4
@@ -1390,44 +1222,63 @@ _SendATCommand:
 	mov	a,sp
 	add	a,#0xfa
 	mov	sp,a
-;	EFM8_JDY40_Transmitter.c:728: P2_0=0; // 'set' pin to 0 is 'AT' mode.
+;	EFM8_JDY40_Receiver.c:276: P2_0=0; // 'set' pin to 0 is 'AT' mode.
 	clr	_P2_0
-;	EFM8_JDY40_Transmitter.c:729: waitms(5);
+;	EFM8_JDY40_Receiver.c:277: waitms(5);
 	mov	dptr,#0x0005
 	lcall	_waitms
 	pop	ar4
 	pop	ar3
 	pop	ar2
-;	EFM8_JDY40_Transmitter.c:730: sendstr1(s);
+;	EFM8_JDY40_Receiver.c:278: sendstr1(s);
 	mov	dpl,r2
 	mov	dph,r3
 	mov	b,r4
 	lcall	_sendstr1
-;	EFM8_JDY40_Transmitter.c:731: waitms(10);
+;	EFM8_JDY40_Receiver.c:279: waitms(10);
 	mov	dptr,#0x000A
 	lcall	_waitms
-;	EFM8_JDY40_Transmitter.c:732: P2_0=1; // 'set' pin to 1 is normal operation mode.
+;	EFM8_JDY40_Receiver.c:280: P2_0=1; // 'set' pin to 1 is normal operation mode.
 	setb	_P2_0
 	ret
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'main'
 ;------------------------------------------------------------
-;X_pos_L                   Allocated with name '_main_X_pos_L_1_111'
-;Y_pos_R                   Allocated with name '_main_Y_pos_R_1_111'
-;X_pos_L_string            Allocated with name '_main_X_pos_L_string_1_111'
-;count                     Allocated to registers 
-;potentiometer             Allocated to registers r4 r5 r2 r3 
-;PWM_DutyCyclePeriod       Allocated to registers 
+;sXAngle                   Allocated with name '_main_sXAngle_1_97'
+;sYAngle                   Allocated with name '_main_sYAngle_1_97'
+;sThrottle                 Allocated with name '_main_sThrottle_1_97'
+;fXAngle                   Allocated to registers 
+;fYAngle                   Allocated to registers 
+;fThrottle                 Allocated to registers 
+;i                         Allocated with name '_main_i_1_97'
+;j                         Allocated with name '_main_j_1_97'
+;k                         Allocated with name '_main_k_1_97'
+;potentiometerReading      Allocated with name '_main_potentiometerReading_1_97'
+;motor_PWM_DutyCycleWidth  Allocated with name '_main_sloc1_1_0'
+;motor_on                  Allocated with name '_main_motor_on_1_97'
+;sloc0                     Allocated with name '_main_sloc0_1_0'
+;sloc1                     Allocated with name '_main_sloc1_1_0'
 ;------------------------------------------------------------
-;	EFM8_JDY40_Transmitter.c:735: void main (void)
+;	EFM8_JDY40_Receiver.c:283: void main (void)
 ;	-----------------------------------------
 ;	 function main
 ;	-----------------------------------------
 _main:
-;	EFM8_JDY40_Transmitter.c:749: waitms(500);
+;	EFM8_JDY40_Receiver.c:298: float motor_PWM_DutyCycleWidth = 1;
+	mov	_main_sloc1_1_0,#0x00
+	mov	(_main_sloc1_1_0 + 1),#0x00
+	mov	(_main_sloc1_1_0 + 2),#0x80
+	mov	(_main_sloc1_1_0 + 3),#0x3F
+;	EFM8_JDY40_Receiver.c:301: int motor_on = 0;
+;	EFM8_JDY40_Receiver.c:303: count20ms=0; // Count20ms is an atomic variable, so no problem sharing with timer 5 ISR
+	clr	a
+	mov	_main_motor_on_1_97,a
+	mov	(_main_motor_on_1_97 + 1),a
+	mov	_count20ms,a
+;	EFM8_JDY40_Receiver.c:304: waitms(500);
 	mov	dptr,#0x01F4
 	lcall	_waitms
-;	EFM8_JDY40_Transmitter.c:750: printf("\r\nJDY-40 test\r\n");
+;	EFM8_JDY40_Receiver.c:305: printf("\r\nJDY-40 test\r\n");
 	mov	a,#__str_1
 	push	acc
 	mov	a,#(__str_1 >> 8)
@@ -1438,191 +1289,373 @@ _main:
 	dec	sp
 	dec	sp
 	dec	sp
-;	EFM8_JDY40_Transmitter.c:751: UART1_Init(9600);
+;	EFM8_JDY40_Receiver.c:306: UART1_Init(9600);
 	mov	dptr,#0x2580
 	clr	a
 	mov	b,a
 	lcall	_UART1_Init
-;	EFM8_JDY40_Transmitter.c:753: InitPinADC(2, 2); // Configure P0.1 as analog input
-	mov	_InitPinADC_PARM_2,#0x02
-	mov	dpl,#0x02
-	lcall	_InitPinADC
-;	EFM8_JDY40_Transmitter.c:754: InitPinADC(1, 2); // Configure P2.3 as analog input
-	mov	_InitPinADC_PARM_2,#0x02
-	mov	dpl,#0x01
-	lcall	_InitPinADC
-;	EFM8_JDY40_Transmitter.c:755: InitPinADC(2, 3);
-	mov	_InitPinADC_PARM_2,#0x03
-	mov	dpl,#0x02
-	lcall	_InitPinADC
-;	EFM8_JDY40_Transmitter.c:756: InitPinADC(2, 1);
-	mov	_InitPinADC_PARM_2,#0x01
-	mov	dpl,#0x02
-	lcall	_InitPinADC
-;	EFM8_JDY40_Transmitter.c:757: InitADC();
-	lcall	_InitADC
-;	EFM8_JDY40_Transmitter.c:773: SendATCommand("AT+DVID2385\r\n");  
+;	EFM8_JDY40_Receiver.c:322: SendATCommand("AT+DVID2385\r\n");  
 	mov	dptr,#__str_2
 	mov	b,#0x80
 	lcall	_SendATCommand
-;	EFM8_JDY40_Transmitter.c:776: SendATCommand("AT+VER\r\n");
+;	EFM8_JDY40_Receiver.c:325: SendATCommand("AT+VER\r\n");
 	mov	dptr,#__str_3
 	mov	b,#0x80
 	lcall	_SendATCommand
-;	EFM8_JDY40_Transmitter.c:777: SendATCommand("AT+BAUD\r\n");
+;	EFM8_JDY40_Receiver.c:326: SendATCommand("AT+BAUD\r\n");
 	mov	dptr,#__str_4
 	mov	b,#0x80
 	lcall	_SendATCommand
-;	EFM8_JDY40_Transmitter.c:778: SendATCommand("AT+RFID\r\n");
+;	EFM8_JDY40_Receiver.c:327: SendATCommand("AT+RFID\r\n");
 	mov	dptr,#__str_5
 	mov	b,#0x80
 	lcall	_SendATCommand
-;	EFM8_JDY40_Transmitter.c:779: SendATCommand("AT+DVID\r\n");
+;	EFM8_JDY40_Receiver.c:328: SendATCommand("AT+DVID\r\n");
 	mov	dptr,#__str_6
 	mov	b,#0x80
 	lcall	_SendATCommand
-;	EFM8_JDY40_Transmitter.c:780: SendATCommand("AT+RFC\r\n");
+;	EFM8_JDY40_Receiver.c:329: SendATCommand("AT+RFC\r\n");
 	mov	dptr,#__str_7
 	mov	b,#0x80
 	lcall	_SendATCommand
-;	EFM8_JDY40_Transmitter.c:781: SendATCommand("AT+POWE\r\n");
+;	EFM8_JDY40_Receiver.c:330: SendATCommand("AT+POWE\r\n");
 	mov	dptr,#__str_8
 	mov	b,#0x80
 	lcall	_SendATCommand
-;	EFM8_JDY40_Transmitter.c:782: SendATCommand("AT+CLSS\r\n");
+;	EFM8_JDY40_Receiver.c:331: SendATCommand("AT+CLSS\r\n");
 	mov	dptr,#__str_9
 	mov	b,#0x80
 	lcall	_SendATCommand
-;	EFM8_JDY40_Transmitter.c:785: while(1)
-L021002?:
-;	EFM8_JDY40_Transmitter.c:790: X_pos_L = Volts_at_Pin(QFP32_MUX_P2_2);
-	mov	dpl,#0x0F
-	lcall	_Volts_at_Pin
-	mov	_main_X_pos_L_1_111,dpl
-	mov	(_main_X_pos_L_1_111 + 1),dph
-	mov	(_main_X_pos_L_1_111 + 2),b
-	mov	(_main_X_pos_L_1_111 + 3),a
-;	EFM8_JDY40_Transmitter.c:791: Y_pos_R = Volts_at_Pin(QFP32_MUX_P1_2);
-	mov	dpl,#0x08
-	lcall	_Volts_at_Pin
-	mov	_main_Y_pos_R_1_111,dpl
-	mov	(_main_Y_pos_R_1_111 + 1),dph
-	mov	(_main_Y_pos_R_1_111 + 2),b
-	mov	(_main_Y_pos_R_1_111 + 3),a
-;	EFM8_JDY40_Transmitter.c:794: X_pos_L *= 1000;
-	push	_main_X_pos_L_1_111
-	push	(_main_X_pos_L_1_111 + 1)
-	push	(_main_X_pos_L_1_111 + 2)
-	push	(_main_X_pos_L_1_111 + 3)
-	mov	dptr,#0x0000
-	mov	b,#0x7A
-	mov	a,#0x44
-	lcall	___fsmul
-	mov	_main_X_pos_L_1_111,dpl
-	mov	(_main_X_pos_L_1_111 + 1),dph
-	mov	(_main_X_pos_L_1_111 + 2),b
-	mov	(_main_X_pos_L_1_111 + 3),a
-	mov	a,sp
-	add	a,#0xfc
-	mov	sp,a
-;	EFM8_JDY40_Transmitter.c:795: Y_pos_R *= 1000;
-	push	_main_Y_pos_R_1_111
-	push	(_main_Y_pos_R_1_111 + 1)
-	push	(_main_Y_pos_R_1_111 + 2)
-	push	(_main_Y_pos_R_1_111 + 3)
-	mov	dptr,#0x0000
-	mov	b,#0x7A
-	mov	a,#0x44
-	lcall	___fsmul
-	mov	_main_Y_pos_R_1_111,dpl
-	mov	(_main_Y_pos_R_1_111 + 1),dph
-	mov	(_main_Y_pos_R_1_111 + 2),b
-	mov	(_main_Y_pos_R_1_111 + 3),a
-	mov	a,sp
-	add	a,#0xfc
-	mov	sp,a
-;	EFM8_JDY40_Transmitter.c:798: potentiometer = throttle_control_ADC(QFP32_MUX_P2_3);
-	mov	dpl,#0x10
-	lcall	_throttle_control_ADC
-	mov	r4,dpl
-	mov	r5,dph
-	mov	r2,b
-	mov	r3,a
-;	EFM8_JDY40_Transmitter.c:801: potentiometer *= 1000;
-	push	ar4
-	push	ar5
-	push	ar2
-	push	ar3
-	mov	dptr,#0x0000
-	mov	b,#0x7A
-	mov	a,#0x44
-	lcall	___fsmul
-	mov	r4,dpl
-	mov	r5,dph
-	mov	r2,b
-	mov	r3,a
-	mov	a,sp
-	add	a,#0xfc
-	mov	sp,a
-;	EFM8_JDY40_Transmitter.c:803: sprintf(buff, "%0*d %0*d %d\n", 4, (int)X_pos_L, 4, (int)Y_pos_R, (int)potentiometer);
-	mov	dpl,r4
-	mov	dph,r5
-	mov	b,r2
-	mov	a,r3
-	lcall	___fs2sint
-	mov	r2,dpl
-	mov	r3,dph
-	mov	dpl,_main_Y_pos_R_1_111
-	mov	dph,(_main_Y_pos_R_1_111 + 1)
-	mov	b,(_main_Y_pos_R_1_111 + 2)
-	mov	a,(_main_Y_pos_R_1_111 + 3)
-	push	ar2
-	push	ar3
-	lcall	___fs2sint
-	mov	r4,dpl
-	mov	r5,dph
-	mov	dpl,_main_X_pos_L_1_111
-	mov	dph,(_main_X_pos_L_1_111 + 1)
-	mov	b,(_main_X_pos_L_1_111 + 2)
-	mov	a,(_main_X_pos_L_1_111 + 3)
-	push	ar4
-	push	ar5
-	lcall	___fs2sint
+;	EFM8_JDY40_Receiver.c:334: pwm_reload=0x10000L-(SYSCLK*motor_PWM_DutyCycleWidth*1.0e-3)/12.0;
+	mov	_pwm_reload,#0x90
+	mov	(_pwm_reload + 1),#0xE8
+;	EFM8_JDY40_Receiver.c:335: ARMINGOUT = 0;
+	clr	_P1_5
+;	EFM8_JDY40_Receiver.c:337: while(1)
+L015024?:
+;	EFM8_JDY40_Receiver.c:340: if(RXU1()){
+	lcall	_RXU1
+	jc	L015060?
+	ljmp	L015009?
+L015060?:
+;	EFM8_JDY40_Receiver.c:341: getstr1(buff);
+	mov	dptr,#_buff
+	mov	b,#0x40
+	lcall	_getstr1
+;	EFM8_JDY40_Receiver.c:343: if(strlen(buff) == 14){
+	mov	dptr,#_buff
+	mov	b,#0x40
+	lcall	_strlen
 	mov	r6,dpl
 	mov	r7,dph
-	mov	a,#0x04
-	push	acc
+	cjne	r6,#0x0E,L015061?
+	cjne	r7,#0x00,L015061?
+	sjmp	L015062?
+L015061?:
+	ljmp	L015002?
+L015062?:
+;	EFM8_JDY40_Receiver.c:345: for(i = 0; i < 4; i++){
+	clr	a
+	mov	_main_i_1_97,a
+	mov	(_main_i_1_97 + 1),a
+L015026?:
+	clr	c
+	mov	a,_main_i_1_97
+	subb	a,#0x04
+	mov	a,(_main_i_1_97 + 1)
+	xrl	a,#0x80
+	subb	a,#0x80
+	jnc	L015029?
+;	EFM8_JDY40_Receiver.c:346: sXAngle[i] = buff[i];
+	mov	a,_main_i_1_97
+	add	a,#_main_sXAngle_1_97
+	mov	r0,a
+	mov	a,_main_i_1_97
+	add	a,#_buff
+	mov	r1,a
+	mov	ar6,@r1
+	mov	@r0,ar6
+;	EFM8_JDY40_Receiver.c:345: for(i = 0; i < 4; i++){
+	inc	_main_i_1_97
+	clr	a
+	cjne	a,_main_i_1_97,L015026?
+	inc	(_main_i_1_97 + 1)
+	sjmp	L015026?
+L015029?:
+;	EFM8_JDY40_Receiver.c:348: sXAngle[4] = '\0';
+	mov	(_main_sXAngle_1_97 + 0x0004),#0x00
+;	EFM8_JDY40_Receiver.c:349: fXAngle = atoi(sXAngle)/1000.0;
+	mov	dptr,#_main_sXAngle_1_97
+	mov	b,#0x40
+	lcall	_atoi
+;	EFM8_JDY40_Receiver.c:351: for(j = 5; j < 9; j++){
+	mov	_main_j_1_97,#0x05
+	clr	a
+	mov	(_main_j_1_97 + 1),a
+L015030?:
+	clr	c
+	mov	a,_main_j_1_97
+	subb	a,#0x09
+	mov	a,(_main_j_1_97 + 1)
+	xrl	a,#0x80
+	subb	a,#0x80
+	jnc	L015033?
+;	EFM8_JDY40_Receiver.c:352: sYAngle[j-5] = buff[j];
+	mov	a,_main_j_1_97
+	add	a,#0xfb
+	add	a,#_main_sYAngle_1_97
+	mov	r0,a
+	mov	a,_main_j_1_97
+	add	a,#_buff
+	mov	r1,a
+	mov	ar6,@r1
+	mov	@r0,ar6
+;	EFM8_JDY40_Receiver.c:351: for(j = 5; j < 9; j++){
+	inc	_main_j_1_97
+	clr	a
+	cjne	a,_main_j_1_97,L015030?
+	inc	(_main_j_1_97 + 1)
+	sjmp	L015030?
+L015033?:
+;	EFM8_JDY40_Receiver.c:354: sYAngle[4] = '\0';
+	mov	(_main_sYAngle_1_97 + 0x0004),#0x00
+;	EFM8_JDY40_Receiver.c:355: fYAngle = atoi(sYAngle)/1000.0;
+	mov	dptr,#_main_sYAngle_1_97
+	mov	b,#0x40
+	lcall	_atoi
+;	EFM8_JDY40_Receiver.c:357: for(k = 10; k < 14; k++){ 
+	mov	_main_k_1_97,#0x0A
+	clr	a
+	mov	(_main_k_1_97 + 1),a
+L015034?:
+	clr	c
+	mov	a,_main_k_1_97
+	subb	a,#0x0E
+	mov	a,(_main_k_1_97 + 1)
+	xrl	a,#0x80
+	subb	a,#0x80
+	jnc	L015037?
+;	EFM8_JDY40_Receiver.c:358: sThrottle[k-10] = buff[k];
+	mov	a,_main_k_1_97
+	add	a,#0xf6
+	add	a,#_main_sThrottle_1_97
+	mov	r0,a
+	mov	a,_main_k_1_97
+	add	a,#_buff
+	mov	r1,a
+	mov	ar6,@r1
+	mov	@r0,ar6
+;	EFM8_JDY40_Receiver.c:357: for(k = 10; k < 14; k++){ 
+	inc	_main_k_1_97
+	clr	a
+	cjne	a,_main_k_1_97,L015034?
+	inc	(_main_k_1_97 + 1)
+	sjmp	L015034?
+L015037?:
+;	EFM8_JDY40_Receiver.c:360: sThrottle[4] = '\0';
+	mov	(_main_sThrottle_1_97 + 0x0004),#0x00
+;	EFM8_JDY40_Receiver.c:361: potentiometerReading = atoi(sThrottle)/1000.0;
+	mov	dptr,#_main_sThrottle_1_97
+	mov	b,#0x40
+	lcall	_atoi
+	lcall	___sint2fs
+	mov	r6,dpl
+	mov	r7,dph
+	mov	r2,b
+	mov	r3,a
 	clr	a
 	push	acc
-	push	ar6
-	push	ar7
-	mov	a,#0x04
 	push	acc
+	mov	a,#0x7A
+	push	acc
+	mov	a,#0x44
+	push	acc
+	mov	dpl,r6
+	mov	dph,r7
+	mov	b,r2
+	mov	a,r3
+	lcall	___fsdiv
+	mov	_main_sloc0_1_0,dpl
+	mov	(_main_sloc0_1_0 + 1),dph
+	mov	(_main_sloc0_1_0 + 2),b
+	mov	(_main_sloc0_1_0 + 3),a
+	mov	a,sp
+	add	a,#0xfc
+	mov	sp,a
+;	EFM8_JDY40_Receiver.c:409: waitms_or_RI1(100);
+;	EFM8_JDY40_Receiver.c:361: potentiometerReading = atoi(sThrottle)/1000.0;
+L015002?:
+;	EFM8_JDY40_Receiver.c:371: if(motor_on){
+	mov	a,_main_motor_on_1_97
+	orl	a,(_main_motor_on_1_97 + 1)
+	jnz	L015069?
+	ljmp	L015006?
+L015069?:
+;	EFM8_JDY40_Receiver.c:373: motor_PWM_DutyCycleWidth = 2.0 - (potentiometerReading-1.0)/4.0;
 	clr	a
 	push	acc
+	push	acc
+	mov	a,#0x80
+	push	acc
+	mov	a,#0x3F
+	push	acc
+	mov	dpl,_main_sloc0_1_0
+	mov	dph,(_main_sloc0_1_0 + 1)
+	mov	b,(_main_sloc0_1_0 + 2)
+	mov	a,(_main_sloc0_1_0 + 3)
+	lcall	___fssub
+	mov	_main_sloc1_1_0,dpl
+	mov	(_main_sloc1_1_0 + 1),dph
+	mov	(_main_sloc1_1_0 + 2),b
+	mov	(_main_sloc1_1_0 + 3),a
+	mov	a,sp
+	add	a,#0xfc
+	mov	sp,a
+	clr	a
+	push	acc
+	push	acc
+	mov	a,#0x80
+	push	acc
+	mov	a,#0x40
+	push	acc
+	mov	dpl,_main_sloc1_1_0
+	mov	dph,(_main_sloc1_1_0 + 1)
+	mov	b,(_main_sloc1_1_0 + 2)
+	mov	a,(_main_sloc1_1_0 + 3)
+	lcall	___fsdiv
+	mov	_main_sloc1_1_0,dpl
+	mov	(_main_sloc1_1_0 + 1),dph
+	mov	(_main_sloc1_1_0 + 2),b
+	mov	(_main_sloc1_1_0 + 3),a
+	mov	a,sp
+	add	a,#0xfc
+	mov	sp,a
+	push	_main_sloc1_1_0
+	push	(_main_sloc1_1_0 + 1)
+	push	(_main_sloc1_1_0 + 2)
+	push	(_main_sloc1_1_0 + 3)
+	mov	dptr,#(0x00&0x00ff)
+	clr	a
+	mov	b,a
+	mov	a,#0x40
+	lcall	___fssub
+	mov	_main_sloc1_1_0,dpl
+	mov	(_main_sloc1_1_0 + 1),dph
+	mov	(_main_sloc1_1_0 + 2),b
+	mov	(_main_sloc1_1_0 + 3),a
+	mov	a,sp
+	add	a,#0xfc
+	mov	sp,a
+	sjmp	L015007?
+L015006?:
+;	EFM8_JDY40_Receiver.c:375: }else if(!motor_on){
+	mov	a,_main_motor_on_1_97
+	orl	a,(_main_motor_on_1_97 + 1)
+;	EFM8_JDY40_Receiver.c:377: motor_PWM_DutyCycleWidth = 1;
+	jnz	L015007?
+	mov	_main_sloc1_1_0,a
+	mov	(_main_sloc1_1_0 + 1),a
+	mov	(_main_sloc1_1_0 + 2),#0x80
+	mov	(_main_sloc1_1_0 + 3),#0x3F
+L015007?:
+;	EFM8_JDY40_Receiver.c:381: pwm_reload=0x10000L-(SYSCLK*motor_PWM_DutyCycleWidth*1.0e-3)/12.0;
+	push	_main_sloc1_1_0
+	push	(_main_sloc1_1_0 + 1)
+	push	(_main_sloc1_1_0 + 2)
+	push	(_main_sloc1_1_0 + 3)
+	mov	dptr,#0xA000
+	mov	b,#0x8C
+	mov	a,#0x47
+	lcall	___fsmul
+	mov	r6,dpl
+	mov	r7,dph
+	mov	r2,b
+	mov	r3,a
+	mov	a,sp
+	add	a,#0xfc
+	mov	sp,a
+	clr	a
+	push	acc
+	push	acc
+	mov	a,#0x40
+	push	acc
+	mov	a,#0x41
+	push	acc
+	mov	dpl,r6
+	mov	dph,r7
+	mov	b,r2
+	mov	a,r3
+	lcall	___fsdiv
+	mov	r2,dpl
+	mov	r3,dph
+	mov	r4,b
+	mov	r5,a
+	mov	a,sp
+	add	a,#0xfc
+	mov	sp,a
+	push	ar2
+	push	ar3
+	push	ar4
+	push	ar5
+	mov	dptr,#0x0000
+	mov	b,#0x80
+	mov	a,#0x47
+	lcall	___fssub
+	mov	r2,dpl
+	mov	r3,dph
+	mov	r4,b
+	mov	r5,a
+	mov	a,sp
+	add	a,#0xfc
+	mov	sp,a
+	mov	dpl,r2
+	mov	dph,r3
+	mov	b,r4
+	mov	a,r5
+	lcall	___fs2uint
+	mov	_pwm_reload,dpl
+	mov	(_pwm_reload + 1),dph
+L015009?:
+;	EFM8_JDY40_Receiver.c:389: if(P0_3 == 0 && !motor_on){
+	jb	_P0_3,L015020?
+	mov	a,_main_motor_on_1_97
+	orl	a,(_main_motor_on_1_97 + 1)
+	jnz	L015020?
+;	EFM8_JDY40_Receiver.c:391: while(P0_3 == 0);
+L015010?:
+	jnb	_P0_3,L015010?
+;	EFM8_JDY40_Receiver.c:393: motor_on = 1;
+	mov	_main_motor_on_1_97,#0x01
+	clr	a
+	mov	(_main_motor_on_1_97 + 1),a
+;	EFM8_JDY40_Receiver.c:394: printf("motor on\r\n");
 	mov	a,#__str_10
 	push	acc
 	mov	a,#(__str_10 >> 8)
 	push	acc
 	mov	a,#0x80
 	push	acc
-	mov	a,#_buff
-	push	acc
-	mov	a,#(_buff >> 8)
-	push	acc
-	mov	a,#0x40
-	push	acc
-	lcall	_sprintf
-	mov	a,sp
-	add	a,#0xf0
-	mov	sp,a
-;	EFM8_JDY40_Transmitter.c:806: printf("%s",buff);
-	mov	a,#_buff
-	push	acc
-	mov	a,#(_buff >> 8)
-	push	acc
-	mov	a,#0x40
-	push	acc
+	lcall	_printf
+	dec	sp
+	dec	sp
+	dec	sp
+;	EFM8_JDY40_Receiver.c:395: ARMINGOUT = 1;
+	setb	_P1_5
+	sjmp	L015021?
+L015020?:
+;	EFM8_JDY40_Receiver.c:397: }else if(P0_3 == 0 && motor_on){
+	jb	_P0_3,L015021?
+	mov	a,_main_motor_on_1_97
+	orl	a,(_main_motor_on_1_97 + 1)
+	jz	L015021?
+;	EFM8_JDY40_Receiver.c:399: while(P0_3 == 0);
+L015013?:
+	jnb	_P0_3,L015013?
+;	EFM8_JDY40_Receiver.c:401: motor_on = 0;
+	clr	a
+	mov	_main_motor_on_1_97,a
+	mov	(_main_motor_on_1_97 + 1),a
+;	EFM8_JDY40_Receiver.c:402: printf("motor off\r\n");
 	mov	a,#__str_11
 	push	acc
 	mov	a,#(__str_11 >> 8)
@@ -1630,17 +1663,16 @@ L021002?:
 	mov	a,#0x80
 	push	acc
 	lcall	_printf
-	mov	a,sp
-	add	a,#0xfa
-	mov	sp,a
-;	EFM8_JDY40_Transmitter.c:807: sendstr1(buff);
-	mov	dptr,#_buff
-	mov	b,#0x40
-	lcall	_sendstr1
-;	EFM8_JDY40_Transmitter.c:809: waitms_or_RI1(100);
+	dec	sp
+	dec	sp
+	dec	sp
+;	EFM8_JDY40_Receiver.c:403: ARMINGOUT = 0;
+	clr	_P1_5
+L015021?:
+;	EFM8_JDY40_Receiver.c:409: waitms_or_RI1(100);
 	mov	dptr,#0x0064
 	lcall	_waitms_or_RI1
-	ljmp	L021002?
+	ljmp	L015024?
 	rseg R_CSEG
 
 	rseg R_XINIT
@@ -1697,11 +1729,14 @@ __str_9:
 	db 0x0A
 	db 0x00
 __str_10:
-	db '%0*d %0*d %d'
+	db 'motor on'
+	db 0x0D
 	db 0x0A
 	db 0x00
 __str_11:
-	db '%s'
+	db 'motor off'
+	db 0x0D
+	db 0x0A
 	db 0x00
 
 	CSEG
