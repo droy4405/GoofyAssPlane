@@ -82,6 +82,23 @@ char _c51_external_startup (void)
 	TR1 = 1; // START Timer1
 	TI = 1;  // Indicate TX0 ready
 
+	// Initialize timer 2 for periodic interrupts
+	TMR2CN0=0x00;   // Stop Timer2; Clear TF2;
+	CKCON0|=0b_0001_0000; // Timer 2 uses the system clock
+	TMR2RL=(0x10000L-(SYSCLK/(2*TIMER_2_FREQ))); // Initialize reload value
+	TMR2=0xffff;   // Set to reload immediately
+	ET2=1;         // Enable Timer2 interrupts
+	TR2=1;         // Start Timer2 (TMR2CN is bit addressable)
+
+// 	// Initialize timer 4 for periodic interrupts
+// 	SFRPAGE=0x10;
+// 	TMR4CN0=0x00;   // Stop Timer4; Clear TF4; WARNING: lives in SFR page 0x10
+// 	CKCON1|=0b_0000_0001; // Timer 4 uses the system clock
+// 	TMR4RL=(0x10000L-(SYSCLK/(2*TIMER_4_FREQ))); // Initialize reload value
+// 	TMR4=0xffff;   // Set to reload immediately
+// 	EIE2|=0b_0000_0100;     // Enable Timer4 interrupts
+// 	TR4=1;
+
   	// Initialize timer 5 for periodic interrupts
 	SFRPAGE=0x10;
 	TMR5CN0=0x00;
@@ -97,40 +114,72 @@ char _c51_external_startup (void)
 	return 0;
 }
 
-// using timer 5 to control ESC
-void Timer5_ISR (void) interrupt INTERRUPT_TIMER5
+void Timer2_ISR (void) interrupt INTERRUPT_TIMER2
 {
-	SFRPAGE=0x10;
-	TF5H = 0; // Clear Timer5 interrupt flag
-	// Since the maximum time we can achieve with this timer in the
-	// configuration above is about 10ms, implement a simple state
-	// machine to produce the required 20ms period.
-	switch (pwm_state)
+	SFRPAGE=0x0;
+	TF2H = 0; // Clear Timer2 interrupt flag
+   	TMR2RL=TMR2RL=0x10000L-(SYSCLK/(2*TIMER_2_FREQ));;
+
+	
+	servo_counter++;
+
+	if(servo_counter==2000)
 	{
-		// case 10:
-		// 	//in this case the PWM is turned off
-		// 	ESCOUT = 0;
-			
-		case 0:
-			ESCOUT=1;
-			TMR5RL=RELOAD_10MS;
-			pwm_state=1;
-			count20ms++;
-		break;
-
-		case 1:
-			ESCOUT=0;
-			TMR5RL=RELOAD_10MS-pwm_reload;
-			pwm_state=2;
-		break;
-
-		default:
-			ESCOUT=0;
-			TMR5RL=pwm_reload;
-			pwm_state=0;
-		break;
+		servo_counter=0;
 	}
+	if(servo1>=servo_counter)
+	{
+		SERVO1=1;
+	}
+	else
+	{
+		SERVO1=0;
+	}
+	if(servo2>=servo_counter)
+	{
+		SERVO2=1;
+	}
+	else
+	{
+		SERVO2=0;
+	}
+    // TIMER_OUT_2=!TIMER_OUT_2;
 }
+
+// using timer 5 to control ESC
+// void Timer5_ISR (void) interrupt INTERRUPT_TIMER5
+// {
+// 	SFRPAGE=0x10;
+// 	TF5H = 0; // Clear Timer5 interrupt flag
+// 	// Since the maximum time we can achieve with this timer in the
+// 	// configuration above is about 10ms, implement a simple state
+// 	// machine to produce the required 20ms period.
+// 	switch (pwm_state)
+// 	{
+// 		// case 10:
+// 		// 	//in this case the PWM is turned off
+// 		// 	ESCOUT = 0;
+			
+// 		case 0:
+// 			ESCOUT=1;
+// 			TMR5RL=RELOAD_10MS;
+// 			pwm_state=1;
+// 			count20ms++;
+// 		break;
+
+// 		case 1:
+// 			ESCOUT=0;
+// 			TMR5RL=RELOAD_10MS-pwm_reload;
+// 			pwm_state=2;
+// 		break;
+
+// 		default:
+// 			ESCOUT=0;
+// 			TMR5RL=pwm_reload;
+// 			pwm_state=0;
+// 		break;
+// 	}
+// }
 
 // Uses Timer3 to delay <us> micro-seconds. 
 void Timer3us(unsigned char us)
@@ -295,7 +344,7 @@ void main (void)
 	//PWM variables
 	float potentiometerReading;
 
-	float motor_PWM_DutyCycleWidth = 1;
+	//float motor_PWM_DutyCycleWidth = 1;
 
 	// this variable is only for testing purposes
 	int motor_on = 0;
@@ -331,8 +380,8 @@ void main (void)
 	SendATCommand("AT+CLSS\r\n");
 
 	// initialllzing throttle duty cycke
-	pwm_reload=0x10000L-(SYSCLK*motor_PWM_DutyCycleWidth*1.0e-3)/12.0;
-	ARMINGOUT = 0;
+	// pwm_reload=0x10000L-(SYSCLK*motor_PWM_DutyCycleWidth*1.0e-3)/12.0;
+	// ARMINGOUT = 0;
 
 	while(1)
 	{
@@ -367,41 +416,8 @@ void main (void)
 				//printf("X: %0.4f, Y: %0.4f, T: %0.4f\n", fXAngle, fYAngle, potentiometerReading);
 			}
 
-			// determing if the motor needs to be turned on
-			if(motor_on){
-			//if motor needs to be turned on change the duty cycle to 1.3ms
-				motor_PWM_DutyCycleWidth = 2.0 - (potentiometerReading-1.0)/4.0;
-			
-			}else if(!motor_on){
-			// otherwise writing 1ms to PWM pulse width for 0% throttle
-				motor_PWM_DutyCycleWidth = 1;
-			}
-
-			// writing to the motor throttle
-			pwm_reload=0x10000L-(SYSCLK*motor_PWM_DutyCycleWidth*1.0e-3)/12.0;
 		}
 
-		// determining if the BLDC needs to be turned on
-		// for testing purposes, the motor will alsways run on min rpm
-		// with a pulse width on 1ms
-
-		// this following code is for testing, if the 
-		if(P0_3 == 0 && !motor_on){
-			// button debounce
-			while(P0_3 == 0);
-
-			motor_on = 1;
-			printf("motor on\r\n");
-			ARMINGOUT = 1;
-
-		}else if(P0_3 == 0 && motor_on){
-			// button debounce
-			while(P0_3 == 0);
-
-			motor_on = 0;
-			printf("motor off\r\n");
-			ARMINGOUT = 0;
-		}
 
 		// printf("Duty: %0.4f, Motor State: %d, Potentiometer: %0.4f\n",
 		//  motor_PWM_DutyCycleWidth, motor_on,potentiometerReading);

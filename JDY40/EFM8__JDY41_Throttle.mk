@@ -1,28 +1,28 @@
 SHELL=cmd
 CC=c51
 COMPORT = $(shell type COMPORT.inc)
-OBJS=EFM8_Servo.obj
+OBJS=EFM8_JDY41_Throttle.obj
 
-EFM8_Servo.hex: $(OBJS)
+EFM8_JDY41_Throttle.hex: $(OBJS)
 	$(CC) $(OBJS)
 	@echo Done!
 	
-EFM8_Servo.obj: EFM8_Servo.c
-	$(CC) -c EFM8_Servo.c
+EFM8_JDY41_Throttle.obj: EFM8_JDY41_Throttle.c
+	$(CC) -c EFM8_JDY41_Throttle.c
 
 clean:
 	@del $(OBJS) *.asm *.lkr *.lst *.map *.hex *.map 2> nul
 
 LoadFlash:
 	@Taskkill /IM putty.exe /F 2>NUL | wait 500
-	EFM8_prog.exe -ft230 -r EFM8_Servo.hex
+	EFM8_prog.exe -ft230 -r EFM8_JDY41_Throttle.hex
 	cmd /c start c:\PUTTY\putty -serial $(COMPORT) -sercfg 115200,8,n,1,N -v
 
 putty:
 	@Taskkill /IM putty.exe /F 2>NUL | wait 500
 	cmd /c start c:\PUTTY\putty -serial $(COMPORT) -sercfg 115200,8,n,1,N -v
 
-Dummy: EFM8_Servo.hex EFM8_Servo.Map
+Dummy: EFM8_JDY41_Throttle.hex EFM8_JDY41_Throttle.Map
 	@echo Nothing to see here!
 	
 explorer:
