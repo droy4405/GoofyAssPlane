@@ -12,7 +12,7 @@ volatile unsigned int pwm_reload;
 volatile unsigned char pwm_state = 0;
 volatile unsigned char count20ms;
 #define ESCOUT P1_7
-#define ARMINGOUT P0_2
+#define ARMINGOUT P1_5
 
 #define RELOAD_10MS (0x10000L-(SYSCLK/(12L*100L)))
 
@@ -172,19 +172,7 @@ void UART1_Init (unsigned long baudrate)
 	SFRPAGE = 0x00;
 }
 
-void waitms_or_RI1 (unsigned int ms)
-{
-	unsigned int j;
-	unsigned char k;
-	for(j=0; j<ms; j++)
-	{
-		for (k=0; k<4; k++)
-		{
-			if(RXU1()) return;
-			Timer3us(250);
-		}
-	}
-}
+
 
 void main (void)
 {
@@ -230,19 +218,21 @@ void main (void)
 		// with a pulse width on 1ms
 
 		// this following code is for testing, if the 
-		if(P0_3 == 0 && !motor_on){
+		if(P0_4 == 0 && !motor_on){
 			// button debounce
-			while(P0_3 == 0);
+			while(P0_4 == 0);
 			motor_on = 1;
 			ARMINGOUT = 1;
+			printf("Motor on\n");
 
-		}else if(P0_3 == 0 && motor_on){
+		}else if(P0_4 == 0 && motor_on){
 			// button debounce
-			while(P0_3 == 0);
+			while(P0_4 == 0);
 			motor_on = 0;
 			ARMINGOUT = 0;
+			printf("Motor off\n");
 		}
 
-		waitms_or_RI1(100);
+		waitms(20);
 	}
 }

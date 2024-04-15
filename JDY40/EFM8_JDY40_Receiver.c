@@ -146,40 +146,6 @@ void Timer2_ISR (void) interrupt INTERRUPT_TIMER2
     // TIMER_OUT_2=!TIMER_OUT_2;
 }
 
-// using timer 5 to control ESC
-// void Timer5_ISR (void) interrupt INTERRUPT_TIMER5
-// {
-// 	SFRPAGE=0x10;
-// 	TF5H = 0; // Clear Timer5 interrupt flag
-// 	// Since the maximum time we can achieve with this timer in the
-// 	// configuration above is about 10ms, implement a simple state
-// 	// machine to produce the required 20ms period.
-// 	switch (pwm_state)
-// 	{
-// 		// case 10:
-// 		// 	//in this case the PWM is turned off
-// 		// 	ESCOUT = 0;
-			
-// 		case 0:
-// 			ESCOUT=1;
-// 			TMR5RL=RELOAD_10MS;
-// 			pwm_state=1;
-// 			count20ms++;
-// 		break;
-
-// 		case 1:
-// 			ESCOUT=0;
-// 			TMR5RL=RELOAD_10MS-pwm_reload;
-// 			pwm_state=2;
-// 		break;
-
-// 		default:
-// 			ESCOUT=0;
-// 			TMR5RL=pwm_reload;
-// 			pwm_state=0;
-// 		break;
-// 	}
-// }
 
 // Uses Timer3 to delay <us> micro-seconds. 
 void Timer3us(unsigned char us)
@@ -331,15 +297,19 @@ void SendATCommand (char * s)
 
 void main (void)
 {
-	char sXAngle[4];
-	char sYAngle[4];
+	char sXAngleL[4];
+	char sYAngleR[4];
+	char sXAngleR[4];
 	char sThrottle[4];
-	float fXAngle = 0;
-	float fYAngle = 0;
+	char sParachute[2];
+
+	float pitch = 0;
+	float roll = 0;
+	float yaw = 0;
 	float fThrottle = 0;
-	int i;
-	int j;
-	int k;
+
+	int i,j,k,l,m;
+	int parachute_deploy = 0;
 
 	//PWM variables
 	float potentiometerReading;
@@ -385,29 +355,41 @@ void main (void)
 
 	while(1)
 	{
-		//PWM receiving signals from the fucking potentiometer
+		//PWM receiving signals from the potentiometer
 		if(RXU1()){
 			getstr1(buff);
 			// checking the length of buff to determine if there is data loss
-			if(strlen(buff) == 14){
+			if(strlen(buff) == 16){
 				//printf("%s\n", buff);
 				for(i = 0; i < 4; i++){
-					sXAngle[i] = buff[i];
+					sXAngleL[i] = buff[i];
 				}
-				sXAngle[4] = '\0';
-				fXAngle = atoi(sXAngle)/1000.0;
+				sXAngleL[4] = '\0';
+				yaw = atoi(sXAngleL)/1000.0;
 
 				for(j = 5; j < 9; j++){
-					sYAngle[j-5] = buff[j];
+					sXAngleR[j-5] = buff[j];
 				}
-				sYAngle[4] = '\0';
-				fYAngle = atoi(sYAngle)/1000.0;
+				sXAngleR[4] = '\0';
+				roll = atoi(sXAngleR)/1000.0;
 
-				for(k = 10; k < 14; k++){ 
-					sThrottle[k-10] = buff[k];
+				for(k = 10; k < 14; k++){
+					sYAngleR[k-10] = buff[k];
+				}
+				sYAngleR[4] = '\0';
+				pitch = atoi(sYAngleR)/1000.0;
+
+				for(l = 15; l < 19; l++){ 
+					sThrottle[l-15] = buff[l];
 				}
 				sThrottle[4] = '\0';
 				potentiometerReading = atoi(sThrottle)/1000.0;
+
+				for(m = 20; m < 21; m++){ 
+					sParachute[m-20] = buff[m];
+				}
+				sParachute[1] = '\0';
+				parachute_deploy = atoi(sParachute);
 				
 				// printf("X: %0.4f, ",fXAngle);
 				// printf("Y: %0.4f, ",fYAngle);
@@ -417,10 +399,6 @@ void main (void)
 			}
 
 		}
-
-
-		// printf("Duty: %0.4f, Motor State: %d, Potentiometer: %0.4f\n",
-		//  motor_PWM_DutyCycleWidth, motor_on,potentiometerReading);
 
 		waitms_or_RI1(100);
 	}

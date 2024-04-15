@@ -202,6 +202,7 @@ unsigned int ADC_at_Pin(unsigned char pin)
 float Volts_at_Pin(unsigned char pin)
 {
 	 return ((ADC_at_Pin(pin)*VDD)/16383.0);
+	 //return (ADC_at_Pin(pin)*VDD/0b_0011_1111_1111_1111);
 }
 
 float throttle_control_ADC(unsigned char pin)
@@ -340,9 +341,10 @@ void main (void)
 {
 	float X_pos_L;
 	float Y_pos_R;
-	char X_pos_L_string[5];
+	float X_pos_R;
 	int count = 0;
 
+	int parachute_deploy = 0;
 	float potentiometer = 0;
 
 	// this important variable is used to change the PWM duty
@@ -389,27 +391,37 @@ void main (void)
 	while(1)
 	{
 		// readng the analog voltage of left joystick X position
-		// on pin 2.1
-
+		// on pin 2.2 and Y reading on pin 1.2
 		X_pos_L = Volts_at_Pin(QFP32_MUX_P2_2);
 		Y_pos_R = Volts_at_Pin(QFP32_MUX_P1_2);
+		X_pos_R = Volts_at_Pin(QFP32_MUX_P2_1);
 		
 		// casting the coords to send with RC
 		X_pos_L *= 1000;
 		Y_pos_R *= 1000;
+		X_pos_R *= 1000;
 
 		//potentiometer = Volts_at_Pin(QFP32_MUX_P2_3);
 		potentiometer = throttle_control_ADC(QFP32_MUX_P2_3);
 
 		// casting throttle reading into int for radio sending
 		potentiometer *= 1000;
-		
-		sprintf(buff, "%0*d %0*d %d\n", 4, (int)X_pos_L, 4, (int)Y_pos_R, (int)potentiometer);
+
+		// reading the parachute states from pin 2.4, note that if the button is pressed
+		// the parachute_deploy variable is set to 1
+		if(P0_4 == 0){
+			// no button debounce for quick responce
+			// while(P2_4 == 0);
+			parachute_deploy = 1;
+		}
+
+		sprintf(buff, "%0*d %0*d %0*d %0*d %d\n",
+		 4, (int)X_pos_L, 4, (int)X_pos_R, 4, (int)Y_pos_R, 4, (int)potentiometer, parachute_deploy);
 
 		//sprintf(buff, "test %d\n",count++);
-		//printf("%s",buff);
 		sendstr1(buff);
+		//printf("%s",buff);
 		
-		waitms_or_RI1(100);
+		waitms_or_RI1(20);
 	}
 }
