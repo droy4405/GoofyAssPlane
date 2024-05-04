@@ -6,6 +6,12 @@
 
 #define SYSCLK 72000000
 #define BAUDRATE 115200L
+#define TIMER_2_FREQ 3000L
+
+volatile unsigned int servo_counter=0;
+volatile unsigned char servo1=150, servo2=150;
+volatile unsigned char SERVO1, SERVO2;
+
 
 idata char buff[20];
 volatile unsigned int pwm_reload;
@@ -82,13 +88,13 @@ char _c51_external_startup (void)
 	TR1 = 1; // START Timer1
 	TI = 1;  // Indicate TX0 ready
 
-	// Initialize timer 2 for periodic interrupts
-	TMR2CN0=0x00;   // Stop Timer2; Clear TF2;
-	CKCON0|=0b_0001_0000; // Timer 2 uses the system clock
-	TMR2RL=(0x10000L-(SYSCLK/(2*TIMER_2_FREQ))); // Initialize reload value
-	TMR2=0xffff;   // Set to reload immediately
-	ET2=1;         // Enable Timer2 interrupts
-	TR2=1;         // Start Timer2 (TMR2CN is bit addressable)
+	// // Initialize timer 2 for periodic interrupts
+	// TMR2CN0=0x00;   // Stop Timer2; Clear TF2;
+	// CKCON0|=0b_0001_0000; // Timer 2 uses the system clock
+	// TMR2RL=(0x10000L-(SYSCLK/(2*TIMER_2_FREQ))); // Initialize reload value
+	// TMR2=0xffff;   // Set to reload immediately
+	// ET2=1;         // Enable Timer2 interrupts
+	// TR2=1;         // Start Timer2 (TMR2CN is bit addressable)
 
 // 	// Initialize timer 4 for periodic interrupts
 // 	SFRPAGE=0x10;
@@ -114,37 +120,37 @@ char _c51_external_startup (void)
 	return 0;
 }
 
-void Timer2_ISR (void) interrupt INTERRUPT_TIMER2
-{
-	SFRPAGE=0x0;
-	TF2H = 0; // Clear Timer2 interrupt flag
-   	TMR2RL=TMR2RL=0x10000L-(SYSCLK/(2*TIMER_2_FREQ));;
+// void Timer2_ISR (void) interrupt INTERRUPT_TIMER2
+// {
+// 	SFRPAGE=0x0;
+// 	TF2H = 0; // Clear Timer2 interrupt flag
+//    	TMR2RL=TMR2RL=0x10000L-(SYSCLK/(2*TIMER_2_FREQ));;
 
 	
-	servo_counter++;
+// 	servo_counter++;
 
-	if(servo_counter==2000)
-	{
-		servo_counter=0;
-	}
-	if(servo1>=servo_counter)
-	{
-		SERVO1=1;
-	}
-	else
-	{
-		SERVO1=0;
-	}
-	if(servo2>=servo_counter)
-	{
-		SERVO2=1;
-	}
-	else
-	{
-		SERVO2=0;
-	}
-    // TIMER_OUT_2=!TIMER_OUT_2;
-}
+// 	if(servo_counter==2000)
+// 	{
+// 		servo_counter=0;
+// 	}
+// 	if(servo1>=servo_counter)
+// 	{
+// 		SERVO1=1;
+// 	}
+// 	else
+// 	{
+// 		SERVO1=0;
+// 	}
+// 	if(servo2>=servo_counter)
+// 	{
+// 		SERVO2=1;
+// 	}
+// 	else
+// 	{
+// 		SERVO2=0;
+// 	}
+//     // TIMER_OUT_2=!TIMER_OUT_2;
+// }
 
 
 // Uses Timer3 to delay <us> micro-seconds. 
@@ -296,11 +302,11 @@ void SendATCommand (char * s)
 }
 
 void main (void)
-{
-	char sXAngleL[4];
-	char sYAngleR[4];
-	char sXAngleR[4];
-	char sThrottle[4];
+{	
+	char sYawL[5]; // rudder, yaw, left joystick, left and right
+	char sPitchR[5]; // elevator, pitch, right joystick, forward backward
+	char sRollR[5]; // aliron, roll, right joystick, left right
+	char sThrottle[5]; // throttle, left joystick, forward backwoard, control
 	char sParachute[2];
 
 	float pitch = 0;
@@ -312,7 +318,7 @@ void main (void)
 	int parachute_deploy = 0;
 
 	//PWM variables
-	float potentiometerReading;
+	float ThrottlePWM;
 
 	//float motor_PWM_DutyCycleWidth = 1;
 
@@ -359,31 +365,31 @@ void main (void)
 		if(RXU1()){
 			getstr1(buff);
 			// checking the length of buff to determine if there is data loss
-			if(strlen(buff) == 16){
+			if(strlen(buff) == 21){
 				//printf("%s\n", buff);
 				for(i = 0; i < 4; i++){
-					sXAngleL[i] = buff[i];
+					sYawL[i] = buff[i];
 				}
-				sXAngleL[4] = '\0';
-				yaw = atoi(sXAngleL)/1000.0;
+				sYawL[4] = '\0';
+				yaw = atoi(sYawL)/1000.0;
 
 				for(j = 5; j < 9; j++){
-					sXAngleR[j-5] = buff[j];
+					sRollR[j-5] = buff[j];
 				}
-				sXAngleR[4] = '\0';
-				roll = atoi(sXAngleR)/1000.0;
+				sRollR[4] = '\0';
+				roll = atoi(sRollR)/1000.0;
 
 				for(k = 10; k < 14; k++){
-					sYAngleR[k-10] = buff[k];
+					sPitchR[k-10] = buff[k];
 				}
-				sYAngleR[4] = '\0';
-				pitch = atoi(sYAngleR)/1000.0;
+				sPitchR[4] = '\0';
+				pitch = atoi(sPitchR)/1000.0;
 
 				for(l = 15; l < 19; l++){ 
 					sThrottle[l-15] = buff[l];
 				}
 				sThrottle[4] = '\0';
-				potentiometerReading = atoi(sThrottle)/1000.0;
+				ThrottlePWM = atoi(sThrottle)/1000.0;
 
 				for(m = 20; m < 21; m++){ 
 					sParachute[m-20] = buff[m];
@@ -395,11 +401,17 @@ void main (void)
 				// printf("Y: %0.4f, ",fYAngle);
 				// printf("T: %0.4f\n",potentiometerReading);
 
-				//printf("X: %0.4f, Y: %0.4f, T: %0.4f\n", fXAngle, fYAngle, potentiometerReading);
+				printf("yaw: %0.4f, roll: %0.4f, pitch: %0.4f, throttle: %0.4f, parachute: %d\n"
+				, yaw, roll, pitch, ThrottlePWM, parachute_deploy);
 			}
 
 		}
 
+		// check if the parachute needs to be deployed
+		// if yes send digital high through pin 0.6
+		P0_6 = parachute_deploy;
+		
+		
 		waitms_or_RI1(100);
 	}
 }

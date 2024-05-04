@@ -200,6 +200,11 @@ void main (void)
 
 	while(1)
 	{
+		// check if the parachute needs to be deployed
+		if(P3_7 == 1){
+			printf("parachute deployed\n");
+		}
+
 		// determing if the motor needs to be turned on
 		if(motor_on){
 		//if motor needs to be turned on change the duty cycle to 1.3ms
