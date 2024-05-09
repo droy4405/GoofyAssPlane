@@ -7,20 +7,30 @@
 #define SYSCLK 72000000
 #define BAUDRATE 115200L
 #define TIMER_2_FREQ 3000L
+#define WINGSERVOL P1_1 //aileron servo
+#define WINGSERVOR P1_2 
+// #define ELEVSERVOL P1_3 //elevator left
+// #define ELEVSERVOR P1_4 //elevator right servo
 
 volatile unsigned int servo_counter=0;
 volatile unsigned char servo1=150, servo2=150;
-volatile unsigned char SERVO1, SERVO2;
-
 
 idata char buff[20];
 volatile unsigned int pwm_reload;
+
+volatile unsigned char timer5_elevL_pwm_Dcycle = 150;
+volatile unsigned char timer5_elevR_pwm_Dcycle = 150;
+
 volatile unsigned char pwm_state = 0;
 volatile unsigned char count20ms;
-#define ESCOUT P1_7
+
+#define timer5_elevL_out P1_7
+#define timer5_elevR_out P1_6
+
 #define ARMINGOUT P1_5
 
 #define RELOAD_10MS (0x10000L-(SYSCLK/(12L*100L)))
+#define RELOAD_10us (0x10000L-(SYSCLK/(12L*100000L))) // 10us rate
 
 char _c51_external_startup (void)
 {
@@ -96,19 +106,19 @@ char _c51_external_startup (void)
 	// ET2=1;         // Enable Timer2 interrupts
 	// TR2=1;         // Start Timer2 (TMR2CN is bit addressable)
 
-// 	// Initialize timer 4 for periodic interrupts
-// 	SFRPAGE=0x10;
-// 	TMR4CN0=0x00;   // Stop Timer4; Clear TF4; WARNING: lives in SFR page 0x10
-// 	CKCON1|=0b_0000_0001; // Timer 4 uses the system clock
-// 	TMR4RL=(0x10000L-(SYSCLK/(2*TIMER_4_FREQ))); // Initialize reload value
-// 	TMR4=0xffff;   // Set to reload immediately
-// 	EIE2|=0b_0000_0100;     // Enable Timer4 interrupts
-// 	TR4=1;
+	// 	// Initialize timer 4 for periodic interrupts
+	// 	SFRPAGE=0x10;
+	// 	TMR4CN0=0x00;   // Stop Timer4; Clear TF4; WARNING: lives in SFR page 0x10
+	// 	CKCON1|=0b_0000_0001; // Timer 4 uses the system clock
+	// 	TMR4RL=(0x10000L-(SYSCLK/(2*TIMER_4_FREQ))); // Initialize reload value
+	// 	TMR4=0xffff;   // Set to reload immediately
+	// 	EIE2|=0b_0000_0100;     // Enable Timer4 interrupts
+	// 	TR4=1;
 
   	// Initialize timer 5 for periodic interrupts
 	SFRPAGE=0x10;
 	TMR5CN0=0x00;
-	pwm_reload=0x10000L-(SYSCLK*1.5e-3)/12.0; // 1.5 miliseconds pulse is the center of the servo
+	// timer5_elevL_pwm_reload=0x10000L-(SYSCLK*1.5e-3)/12.0; // 1.5 miliseconds pulse is the center of the servo
 	TMR5=0xffff;   // Set to reload immediately
 	EIE2|=0b_0000_1000; // Enable Timer5 interrupts
 	TR5=1;         // Start Timer5 (TMR5CN0 is bit addressable)
@@ -119,6 +129,110 @@ char _c51_external_startup (void)
 
 	return 0;
 }
+
+// controlling PWM for servo motors on the receiver chip
+void Timer5_ISR (void) interrupt INTERRUPT_TIMER5
+{
+	// SFRPAGE=0x10;
+	// TF5H = 0; // Clear Timer5 interrupt flag
+	// // Since the maximum time we can achieve with this timer in the
+	// // configuration above is about 10ms, implement a simple state
+	// // machine to produce the required 20ms period.
+	// switch (pwm_state)
+	// {
+	// 	// case 10:
+	// 	// 	//in this case the PWM is turned off
+	// 	// 	ESCOUT = 0;
+			
+	// 	case 0:
+	// 		timer5_elevL_out=1;
+	// 		TMR5RL=RELOAD_10MS;
+	// 		pwm_state=1;
+	// 		count20ms++;
+	// 	break;
+
+	// 	case 1:
+	// 		timer5_elevL_out=0;
+	// 		TMR5RL=RELOAD_10MS-timer5_elevL_pwm_reload;
+	// 		pwm_state=2;
+	// 	break;
+
+	// 	default:
+	// 		timer5_elevL_out=0;
+	// 		timer5_elevR_out=0;
+	// 		TMR5RL=timer5_elevL_pwm_reload;
+	// 		pwm_state=0;
+	// 	break;
+	// }
+
+	SFRPAGE=0x10;
+	TF5H = 0; // Clear Timer5 interrupt flag
+	TMR5RL=RELOAD_10us;
+	servo_counter++;
+	if(servo_counter==2000)
+	{
+		servo_counter=0;
+	}
+
+	if(timer5_elevL_pwm_Dcycle>=servo_counter)
+	{
+		timer5_elevL_out=1;
+	}
+	else
+	{
+		timer5_elevL_out=0;
+	}
+	if(timer5_elevR_pwm_Dcycle>=servo_counter)
+	{
+		timer5_elevR_out=1;
+	}
+	else
+	{
+		timer5_elevR_out=0;
+	}
+}
+
+// timer 2 for controlling servos on the wings
+
+//pseudo code
+// on the right wing pwmWingR. paired with  left aileron
+// max deflection degree = 25
+// right joystick, left right dir
+// if joystick is all the way to left -> roll left -> right aileron move down 25 degree, left move up 25
+// 
+// void Timer2_ISR (void) interrupt INTERRUPT_TIMER5
+// {
+// 	SFRPAGE=0x10;
+// 	TF2H = 0; // Clear Timer2 interrupt flag
+// 	// Since the maximum time we can achieve with this timer in the
+// 	// configuration above is about 10ms, implement a simple state
+// 	// machine to produce the required 20ms period.
+// 	switch (pwm_state)
+// 	{
+// 		// case 10:
+// 		// 	//in this case the PWM is turned off
+// 		// 	ESCOUT = 0;
+			
+// 		case 0:
+// 			ESCOUT=1;
+// 			TMR2RL=RELOAD_10MS;
+// 			pwm_state=1;
+// 			count20ms++;
+// 		break;
+
+// 		case 1:
+// 			ESCOUT=0;
+// 			TMR2RL=RELOAD_10MS-pwm_reload;
+// 			pwm_state=2;
+// 		break;
+
+// 		default:
+// 			ESCOUT=0;
+// 			TMR2RL=pwm_reload;
+// 			pwm_state=0;
+// 		break;
+// 	}
+// }
 
 // void Timer2_ISR (void) interrupt INTERRUPT_TIMER2
 // {
@@ -300,6 +414,14 @@ void SendATCommand (char * s)
 	waitms(10);
 	P2_0=1; // 'set' pin to 1 is normal operation mode.
 }
+
+// take the joystick input and map it to pwm val
+// for aileron
+// void map_angle_deflection(int x)
+// {
+// 	if(x ==)
+// }
+
 
 void main (void)
 {	

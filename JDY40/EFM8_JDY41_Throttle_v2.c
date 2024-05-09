@@ -87,23 +87,23 @@ char _c51_external_startup (void)
 	TR1 = 1; // START Timer1
 	TI = 1;  // Indicate TX0 ready
 
-  	// Initialize timer 5 for periodic interrupts
-	SFRPAGE=0x10;
-	TMR5CN0=0x00;
-	CKCON1|=0b_0000_0100; // Timer 5 uses the system clock
-	pwm_reload=0x10000L-(SYSCLK*1.5e-3)/12.0; // 1.5 miliseconds pulse is the center of the servo
-	TMR5=0xffff;   // Set to reload immediately
-	EIE2|=0b_0000_1000; // Enable Timer5 interrupts
-	TR5=1;         // Start Timer5 (TMR5CN0 is bit addressable)
-	
-	// Initialize timer 4 for periodic interrupts
+ // Initialize timer 4 for periodic interrupts
 	SFRPAGE=0x10;
 	TMR4CN0=0x00;   // Stop Timer4; Clear TF4; WARNING: lives in SFR page 0x10
 	CKCON1|=0b_0000_0001; // Timer 4 uses the system clock
-	pwm_parachute_reload=0x10000L-(SYSCLK*1.0e-3)/12.0; // 1.5 miliseconds pulse is the center of the servo
+	TMR4RL=(0x10000L-(SYSCLK/(2*TIMER_4_FREQ))); // Initialize reload value
 	TMR4=0xffff;   // Set to reload immediately
 	EIE2|=0b_0000_0100;     // Enable Timer4 interrupts
 	TR4=1;
+
+	// Initialize timer 5 for periodic interrupts
+	SFRPAGE=0x10;
+	TMR5CN0=0x00;   // Stop Timer5; Clear TF5; WARNING: lives in SFR page 0x10
+	CKCON1|=0b_0000_0100; // Timer 5 uses the system clock
+	TMR5RL=(0x10000L-(SYSCLK/(2*TIMER_5_FREQ))); // Initialize reload value
+	TMR5=0xffff;   // Set to reload immediately
+	EIE2|=0b_0000_1000; // Enable Timer5 interrupts
+	TR5=1;         // Start Timer5 (TMR5CN0 is bit addressable)
 
 	EA=1;
 	
@@ -271,9 +271,7 @@ void main (void)
 			//parachute_PWM = 1.0;
 			// writing to the parachute pwm
 			//pwm_parachute_reload=0x10000L-(SYSCLK*2.0*1.0e-3)/12.0;
-			parachute_Dcycle = 200;
-				
-			// }
+			
 		}
 		// else if(P3_7 == 0){
 		// 	parachute_PWM = 2.0;
