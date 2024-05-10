@@ -1,4 +1,3 @@
-
 #include <EFM8LB1.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -16,10 +15,11 @@ volatile unsigned char count20ms;
 
 #define ESCOUT P1_7
 #define ARMINGOUT P1_5
-#define PARACHUTEOUT P1_3 // servo
+#define PARACHUTEOUT P2_0 // servo
 
 #define RELOAD_10MS (0x10000L-(SYSCLK/(12L*100L)))
 #define RELOAD_10us (0x10000L-(SYSCLK/(12L*100000L))) // 10us rate
+#define RELOAD_100us (0x10000L-(SYSCLK/(12L*10000L))) // 100us rate
 
 char _c51_external_startup (void)
 {
@@ -71,6 +71,8 @@ char _c51_external_startup (void)
 	
 	P0MDOUT |= 0x11; // Enable UART0 TX (P0.4) and UART1 TX (P0.0) as push-pull outputs
 	P2MDOUT |= 0x01; // P2.0 in push-pull mode
+	
+	//P3MDOUT |= 0b_1000_0000;
 	XBR0     = 0x01; // Enable UART0 on P0.4(TX) and P0.5(RX)                     
 	XBR1     = 0X00;
 	XBR2     = 0x41; // Enable crossbar and uart 1
@@ -87,23 +89,23 @@ char _c51_external_startup (void)
 	TR1 = 1; // START Timer1
 	TI = 1;  // Indicate TX0 ready
 
-  	// Initialize timer 5 for periodic interrupts
+  	//Initialize timer 5 for periodic interrupts
 	SFRPAGE=0x10;
 	TMR5CN0=0x00;
 	CKCON1|=0b_0000_0100; // Timer 5 uses the system clock
-	pwm_reload=0x10000L-(SYSCLK*1.5e-3)/12.0; // 1.5 miliseconds pulse is the center of the servo
+	//pwm_reload=0x10000L-(SYSCLK*1.5e-3)/12.0; // 1.5 miliseconds pulse is the center of the servo
 	TMR5=0xffff;   // Set to reload immediately
 	EIE2|=0b_0000_1000; // Enable Timer5 interrupts
 	TR5=1;         // Start Timer5 (TMR5CN0 is bit addressable)
 	
-	// Initialize timer 4 for periodic interrupts
-	SFRPAGE=0x10;
-	TMR4CN0=0x00;   // Stop Timer4; Clear TF4; WARNING: lives in SFR page 0x10
-	CKCON1|=0b_0000_0001; // Timer 4 uses the system clock
-	pwm_parachute_reload=0x10000L-(SYSCLK*1.0e-3)/12.0; // 1.5 miliseconds pulse is the center of the servo
-	TMR4=0xffff;   // Set to reload immediately
-	EIE2|=0b_0000_0100;     // Enable Timer4 interrupts
-	TR4=1;
+	// // Initialize timer 4 for periodic interrupts
+	// SFRPAGE=0x10;
+	// TMR4CN0=0x00;   // Stop Timer4; Clear TF4; WARNING: lives in SFR page 0x10
+	// CKCON1|=0b_0000_0001; // Timer 4 uses the system clock
+	// //pwm_parachute_reload=0x10000L-(SYSCLK*1.0e-3)/12.0; // 1.5 miliseconds pulse is the center of the servo
+	// TMR4=0xffff;   // Set to reload immediately
+	// EIE2|=0b_0000_0100;     // Enable Timer4 interrupts
+	// TR4=1;
 
 	EA=1;
 	
@@ -113,16 +115,38 @@ char _c51_external_startup (void)
 }
 
 volatile unsigned int servo_counter=0;
-volatile unsigned char parachute_Dcycle=100;
+volatile unsigned char parachute_Dcycle=10;
 //using timer 4 to control parachute PWM
-void Timer4_ISR (void) interrupt INTERRUPT_TIMER4
+// void Timer4_ISR (void) interrupt INTERRUPT_TIMER4
+// {
+// 	SFRPAGE=0x10;
+// 	TF4H = 0; // Clear Timer4 interrupt flag
+
+// 	TMR4RL=RELOAD_10us;
+// 	servo_counter++;
+// 	if(servo_counter==2000)
+// 	{
+// 		servo_counter=0;
+// 	}
+// 	if(parachute_Dcycle>=servo_counter)
+// 	{
+// 		PARACHUTEOUT=1;
+// 	}
+// 	else
+// 	{
+// 		PARACHUTEOUT=0;
+// 	}
+	
+// }
+
+void Timer5_ISR (void) interrupt INTERRUPT_TIMER5
 {
 	SFRPAGE=0x10;
-	TF4H = 0; // Clear Timer4 interrupt flag
+	TF5H = 0; // Clear Timer4 interrupt flag
 
-	TMR4RL=RELOAD_10us;
+	TMR5RL=RELOAD_100us;
 	servo_counter++;
-	if(servo_counter==2000)
+	if(servo_counter==200)
 	{
 		servo_counter=0;
 	}
@@ -135,27 +159,6 @@ void Timer4_ISR (void) interrupt INTERRUPT_TIMER4
 		PARACHUTEOUT=0;
 	}
 	
-	// switch (pwm_state2)
-	// {
-	// 	case 0:
-	// 		PARACHUTEOUT=1;
-	// 		TMR4RL=RELOAD_10MS;
-	// 		pwm_state2=1;
-	// 		count20ms++;
-	// 	break;
-
-	// 	case 1:
-	// 		PARACHUTEOUT=0;
-	// 		TMR4RL=RELOAD_10MS-pwm_parachute_reload;
-	// 		pwm_state2=2;
-	// 	break;
-
-	// 	default:
-	// 		PARACHUTEOUT=0;
-	// 		TMR4RL=pwm_parachute_reload;
-	// 		pwm_state2=0;
-	// 	break;
-	// }
 }
 
 // using timer 5 to control engine PWM on the throttle controller
@@ -258,7 +261,7 @@ void main (void)
 	UART1_Init(9600);
 	
 	// initialllzing throttle duty cycke
-	pwm_reload=0x10000L-(SYSCLK*motor_PWM_DutyCycleWidth*1.0e-3)/12.0;
+	//pwm_reload=0x10000L-(SYSCLK*motor_PWM_DutyCycleWidth*1.0e-3)/12.0;
 	//pwm_parachute_reload=0x10000L-(SYSCLK*1.0*1.0e-3)/12.0;
 	ARMINGOUT = 0;
 	
@@ -270,8 +273,7 @@ void main (void)
 			printf("parachute deploy\n");
 			//parachute_PWM = 1.0;
 			// writing to the parachute pwm
-			//pwm_parachute_reload=0x10000L-(SYSCLK*2.0*1.0e-3)/12.0;
-			parachute_Dcycle = 200;
+			parachute_Dcycle = 20;
 				
 			// }
 		}
