@@ -15,7 +15,7 @@
 volatile unsigned int servo_counter=0;
 volatile unsigned char servo1=150, servo2=150;
 
-idata char buff[20];
+idata char buff[22];
 volatile unsigned int pwm_reload;
 
 volatile unsigned char timer5_elevL_pwm_Dcycle = 150;
@@ -430,6 +430,9 @@ void main (void)
 	char sRollR[5]; // aliron, roll, right joystick, left right
 	char sThrottle[5]; // throttle, left joystick, forward backwoard, control
 	char sParachute[2];
+	char sThrottle_level2[2];
+	char sThrottle_level1[2];
+	char sThrottle_level0[2];
 
 	float pitch = 0;
 	float roll = 0;
@@ -438,6 +441,10 @@ void main (void)
 
 	int i,j,k,l,m;
 	int parachute_deploy = 0;
+
+	int throttle_level2 = 0;
+	int throttle_level1 = 0;
+	int throttle_level0 = 0;
 
 	//PWM variables
 	float ThrottlePWM;
@@ -487,7 +494,7 @@ void main (void)
 		if(RXU1()){
 			getstr1(buff);
 			// checking the length of buff to determine if there is data loss
-			if(strlen(buff) == 21){
+			if(strlen(buff) == 22){
 				//printf("%s\n", buff);
 				for(i = 0; i < 4; i++){
 					sYawL[i] = buff[i];
@@ -507,24 +514,34 @@ void main (void)
 				sPitchR[4] = '\0';
 				pitch = atoi(sPitchR)/1000.0;
 
-				for(l = 15; l < 19; l++){ 
-					sThrottle[l-15] = buff[l];
-				}
-				sThrottle[4] = '\0';
-				ThrottlePWM = atoi(sThrottle)/1000.0;
+				// for(l = 15; l < 19; l++){ 
+				// 	sThrottle[l-15] = buff[l];
+				// }
+				// sThrottle[4] = '\0';
+				// ThrottlePWM = atoi(sThrottle)/1000.0;
 
-				for(m = 20; m < 21; m++){ 
-					sParachute[m-20] = buff[m];
+				for(l = 15; l < 16; l++){ 
+					sParachute[l-15] = buff[l];
 				}
 				sParachute[1] = '\0';
 				parachute_deploy = atoi(sParachute);
 				
+				sThrottle_level2[0] = buff[17];
+				sThrottle_level2[1] = '\0';
+				sThrottle_level1[0] = buff[19];
+				sThrottle_level1[1] = '\0';
+				sThrottle_level0[0] = buff[21];
+				sThrottle_level0[1] = '\0';
+
+				throttle_level2 = atoi(sThrottle_level2);
+				throttle_level1 = atoi(sThrottle_level1);
+				throttle_level0 = atoi(sThrottle_level0);
 				// printf("X: %0.4f, ",fXAngle);
 				// printf("Y: %0.4f, ",fYAngle);
 				// printf("T: %0.4f\n",potentiometerReading);
 
-				printf("yaw: %0.4f, roll: %0.4f, pitch: %0.4f, throttle: %0.4f, parachute: %d\n"
-				, yaw, roll, pitch, ThrottlePWM, parachute_deploy);
+				//printf("yaw: %0.4f, roll: %0.4f, pitch: %0.4f, parachute: %d throttle: %d, %d, %d\n"
+				//, yaw, roll, pitch, parachute_deploy, throttle_level2, throttle_level1, throttle_level0);
 			}
 
 		}
@@ -533,6 +550,10 @@ void main (void)
 		// if yes send digital high through pin 0.6
 		P0_6 = parachute_deploy;
 		
+		// sending the throttle level signal from RC slave to SPI slave
+		P1_0 = throttle_level2;
+		P1_1 = throttle_level1;
+		P1_2 = throttle_level0;
 		
 		waitms_or_RI1(100);
 	}
