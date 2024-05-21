@@ -339,10 +339,15 @@ void SendATCommand (char * s)
 
 void main (void)
 {
+	float Y_pos_L;
 	float X_pos_L;
 	float Y_pos_R;
 	float X_pos_R;
 	int count = 0;
+
+	int throttle_level2 = 0;
+	int throttle_level1 = 0;
+	int throttle_level0 = 0;
 
 	int parachute_deploy = 0;
 	float potentiometer = 0;
@@ -392,20 +397,22 @@ void main (void)
 	{
 		// readng the analog voltage of left joystick X position
 		// on pin 2.2 and Y reading on pin 1.2
+		Y_pos_L = Volts_at_Pin(QFP32_MUX_P2_4);
 		X_pos_L = Volts_at_Pin(QFP32_MUX_P2_2);
 		Y_pos_R = Volts_at_Pin(QFP32_MUX_P1_2);
 		X_pos_R = Volts_at_Pin(QFP32_MUX_P2_1);
 		
 		// casting the coords to send with RC
+		//Y_pos_L *= 1000;
 		X_pos_L *= 1000;
 		Y_pos_R *= 1000;
 		X_pos_R *= 1000;
 
 		//potentiometer = Volts_at_Pin(QFP32_MUX_P2_3);
-		potentiometer = throttle_control_ADC(QFP32_MUX_P2_3);
+		//potentiometer = throttle_control_ADC(QFP32_MUX_P2_3);
 
 		// casting throttle reading into int for radio sending
-		potentiometer *= 1000;
+		//potentiometer *= 1000;
 
 		// reading the parachute states from pin 2.4, note that if the button is pressed
 		// the parachute_deploy variable is set to 1
@@ -415,8 +422,50 @@ void main (void)
 			parachute_deploy = 1;
 		}
 
-		sprintf(buff, "%0*d %0*d %0*d %0*d %d\n",
-		 4, (int)X_pos_L, 4, (int)X_pos_R, 4, (int)Y_pos_R, 4, (int)potentiometer, parachute_deploy);
+		// now mapping the throttle input into different throttle levels
+		// 000 - 0%
+		// 001 - 17%
+		// 010 - 33%
+		// 011 - 50%
+		// 100 - 67%
+		// 101 - 83%
+		// 110 - 100%
+		// Y_pos_L controls the power level of the throttles
+
+		
+		if(Y_pos_L < 5.0/7.0){ // if the throttle joystick is at lowest position
+			throttle_level2 = 1;
+			throttle_level1 = 1;
+			throttle_level0 = 0;
+		}else if(Y_pos_L < 5.0/7.0*2.0){
+			throttle_level2 = 1;
+			throttle_level1 = 0;
+			throttle_level0 = 1;
+		}else if(Y_pos_L < 5.0/7.0*3.0){
+			throttle_level2 = 1;
+			throttle_level1 = 0;
+			throttle_level0 = 0;
+		}else if(Y_pos_L < 5.0/7.0*4.0){
+			throttle_level2 = 0;
+			throttle_level1 = 1;
+			throttle_level0 = 1;
+		}else if(Y_pos_L < 5.0/7.0*5.0){
+			throttle_level2 = 0;
+			throttle_level1 = 1;
+			throttle_level0 = 0;
+		}else if(Y_pos_L < 5.0/7.0*6.0){
+			throttle_level2 = 0;
+			throttle_level1 = 0;
+			throttle_level0 = 1;
+		}else{
+			throttle_level2 = 0;
+			throttle_level1 = 0;
+			throttle_level0 = 0;
+		}
+
+		sprintf(buff, "%0*d %0*d %0*d %d %d %d %d\n",
+		 4, (int)X_pos_L, 4, (int)X_pos_R, 4, (int)Y_pos_R, 
+		parachute_deploy, throttle_level2, throttle_level1, throttle_level0);
 
 		//sprintf(buff, "test %d\n",count++);
 		sendstr1(buff);

@@ -6,15 +6,32 @@
 
 #define SYSCLK 72000000
 #define BAUDRATE 115200L
+#define TIMER_2_FREQ 3000L
+#define AILERONSERVOL P1_1 //aileron servo
+#define AILERONSERVOR P1_2 
+// #define ELEVSERVOL P1_3 //elevator left
+// #define ELEVSERVOR P1_4 //elevator right servo
 
-idata char buff[20];
+volatile unsigned int servo_counter=0;
+volatile unsigned int aileron_counter=0;
+volatile unsigned char aileron_L=150, aileron_R=150;
+
+idata char buff[22];
 volatile unsigned int pwm_reload;
+
+volatile unsigned char timer5_elevL_pwm_Dcycle = 150;
+volatile unsigned char timer5_elevR_pwm_Dcycle = 150;
+
 volatile unsigned char pwm_state = 0;
 volatile unsigned char count20ms;
-#define ESCOUT P1_7
+
+#define timer5_elevL_out P1_7
+#define timer5_elevR_out P1_6
+
 #define ARMINGOUT P1_5
 
 #define RELOAD_10MS (0x10000L-(SYSCLK/(12L*100L)))
+#define RELOAD_10us (0x10000L-(SYSCLK/(12L*100000L))) // 10us rate
 
 char _c51_external_startup (void)
 {
@@ -90,19 +107,19 @@ char _c51_external_startup (void)
 	ET2=1;         // Enable Timer2 interrupts
 	TR2=1;         // Start Timer2 (TMR2CN is bit addressable)
 
-// 	// Initialize timer 4 for periodic interrupts
-// 	SFRPAGE=0x10;
-// 	TMR4CN0=0x00;   // Stop Timer4; Clear TF4; WARNING: lives in SFR page 0x10
-// 	CKCON1|=0b_0000_0001; // Timer 4 uses the system clock
-// 	TMR4RL=(0x10000L-(SYSCLK/(2*TIMER_4_FREQ))); // Initialize reload value
-// 	TMR4=0xffff;   // Set to reload immediately
-// 	EIE2|=0b_0000_0100;     // Enable Timer4 interrupts
-// 	TR4=1;
+	// 	// Initialize timer 4 for periodic interrupts
+	// 	SFRPAGE=0x10;
+	// 	TMR4CN0=0x00;   // Stop Timer4; Clear TF4; WARNING: lives in SFR page 0x10
+	// 	CKCON1|=0b_0000_0001; // Timer 4 uses the system clock
+	// 	TMR4RL=(0x10000L-(SYSCLK/(2*TIMER_4_FREQ))); // Initialize reload value
+	// 	TMR4=0xffff;   // Set to reload immediately
+	// 	EIE2|=0b_0000_0100;     // Enable Timer4 interrupts
+	// 	TR4=1;
 
   	// Initialize timer 5 for periodic interrupts
 	SFRPAGE=0x10;
 	TMR5CN0=0x00;
-	pwm_reload=0x10000L-(SYSCLK*1.5e-3)/12.0; // 1.5 miliseconds pulse is the center of the servo
+	// timer5_elevL_pwm_reload=0x10000L-(SYSCLK*1.5e-3)/12.0; // 1.5 miliseconds pulse is the center of the servo
 	TMR5=0xffff;   // Set to reload immediately
 	EIE2|=0b_0000_1000; // Enable Timer5 interrupts
 	TR5=1;         // Start Timer5 (TMR5CN0 is bit addressable)
@@ -114,6 +131,45 @@ char _c51_external_startup (void)
 	return 0;
 }
 
+// controlling PWM for servo motors on the receiver chip
+void Timer5_ISR (void) interrupt INTERRUPT_TIMER5
+{
+
+	SFRPAGE=0x10;
+	TF5H = 0; // Clear Timer5 interrupt flag
+	TMR5RL=RELOAD_10us;
+	servo_counter++;
+	if(servo_counter==2000)
+	{
+		servo_counter=0;
+	}
+
+	if(timer5_elevL_pwm_Dcycle>=servo_counter)
+	{
+		timer5_elevL_out=1;
+	}
+	else
+	{
+		timer5_elevL_out=0;
+	}
+	if(timer5_elevR_pwm_Dcycle>=servo_counter)
+	{
+		timer5_elevR_out=1;
+	}
+	else
+	{
+		timer5_elevR_out=0;
+	}
+}
+
+
+// timer 2 for controlling servos on the wings
+// pseudo code
+// on the right wing pwmWingR. paired with  left aileron
+// max deflection degree = 25
+// right joystick, left right dir
+// if joystick is all the way to left -> roll left -> right aileron move down 25 degree, left move up 25
+
 void Timer2_ISR (void) interrupt INTERRUPT_TIMER2
 {
 	SFRPAGE=0x0;
@@ -121,29 +177,28 @@ void Timer2_ISR (void) interrupt INTERRUPT_TIMER2
    	TMR2RL=TMR2RL=0x10000L-(SYSCLK/(2*TIMER_2_FREQ));;
 
 	
-	servo_counter++;
+	aileron_counter++;
 
-	if(servo_counter==2000)
+	if(aileron_counter==2000)
 	{
-		servo_counter=0;
+		aileron_counter=0;
 	}
-	if(servo1>=servo_counter)
+	if(aileron_L>=aileron_counter)
 	{
-		SERVO1=1;
-	}
-	else
-	{
-		SERVO1=0;
-	}
-	if(servo2>=servo_counter)
-	{
-		SERVO2=1;
+		AILERONSERVOL=1;
 	}
 	else
 	{
-		SERVO2=0;
+		AILERONSERVOL=0;
 	}
-    // TIMER_OUT_2=!TIMER_OUT_2;
+	if(aileron_R>=aileron_counter)
+	{
+		AILERONSERVOR=1;
+	}
+	else
+	{
+		AILERONSERVOR=0;
+	}
 }
 
 
@@ -295,13 +350,24 @@ void SendATCommand (char * s)
 	P2_0=1; // 'set' pin to 1 is normal operation mode.
 }
 
+// take the joystick input and map it to pwm val
+// for aileron
+// void map_angle_deflection(int x)
+// {
+// 	if(x ==)
+// }
+
+
 void main (void)
-{
-	char sXAngleL[4];
-	char sYAngleR[4];
-	char sXAngleR[4];
-	char sThrottle[4];
+{	
+	char sYawL[5]; // rudder, yaw, left joystick, left and right
+	char sPitchR[5]; // elevator, pitch, right joystick, forward backward
+	char sRollR[5]; // aliron, roll, right joystick, left right
+	char sThrottle[5]; // throttle, left joystick, forward backwoard, control
 	char sParachute[2];
+	char sThrottle_level2[2];
+	char sThrottle_level1[2];
+	char sThrottle_level0[2];
 
 	float pitch = 0;
 	float roll = 0;
@@ -311,8 +377,12 @@ void main (void)
 	int i,j,k,l,m;
 	int parachute_deploy = 0;
 
+	int throttle_level2 = 0;
+	int throttle_level1 = 0;
+	int throttle_level0 = 0;
+
 	//PWM variables
-	float potentiometerReading;
+	float ThrottlePWM;
 
 	//float motor_PWM_DutyCycleWidth = 1;
 
@@ -359,47 +429,80 @@ void main (void)
 		if(RXU1()){
 			getstr1(buff);
 			// checking the length of buff to determine if there is data loss
-			if(strlen(buff) == 16){
+			if(strlen(buff) == 22){
 				//printf("%s\n", buff);
 				for(i = 0; i < 4; i++){
-					sXAngleL[i] = buff[i];
+					sYawL[i] = buff[i];
 				}
-				sXAngleL[4] = '\0';
-				yaw = atoi(sXAngleL)/1000.0;
+				sYawL[4] = '\0';
+				yaw = atoi(sYawL)/1000.0;
 
 				for(j = 5; j < 9; j++){
-					sXAngleR[j-5] = buff[j];
+					sRollR[j-5] = buff[j];
 				}
-				sXAngleR[4] = '\0';
-				roll = atoi(sXAngleR)/1000.0;
+				sRollR[4] = '\0';
+				roll = atoi(sRollR)/1000.0;
 
 				for(k = 10; k < 14; k++){
-					sYAngleR[k-10] = buff[k];
+					sPitchR[k-10] = buff[k];
 				}
-				sYAngleR[4] = '\0';
-				pitch = atoi(sYAngleR)/1000.0;
+				sPitchR[4] = '\0';
+				pitch = atoi(sPitchR)/1000.0;
 
-				for(l = 15; l < 19; l++){ 
-					sThrottle[l-15] = buff[l];
-				}
-				sThrottle[4] = '\0';
-				potentiometerReading = atoi(sThrottle)/1000.0;
-
-				for(m = 20; m < 21; m++){ 
-					sParachute[m-20] = buff[m];
+				for(l = 15; l < 16; l++){ 
+					sParachute[l-15] = buff[l];
 				}
 				sParachute[1] = '\0';
 				parachute_deploy = atoi(sParachute);
 				
+				sThrottle_level2[0] = buff[17];
+				sThrottle_level2[1] = '\0';
+				sThrottle_level1[0] = buff[19];
+				sThrottle_level1[1] = '\0';
+				sThrottle_level0[0] = buff[21];
+				sThrottle_level0[1] = '\0';
+
+				throttle_level2 = atoi(sThrottle_level2);
+				throttle_level1 = atoi(sThrottle_level1);
+				throttle_level0 = atoi(sThrottle_level0);
 				// printf("X: %0.4f, ",fXAngle);
 				// printf("Y: %0.4f, ",fYAngle);
 				// printf("T: %0.4f\n",potentiometerReading);
 
-				//printf("X: %0.4f, Y: %0.4f, T: %0.4f\n", fXAngle, fYAngle, potentiometerReading);
+				//printf("yaw: %0.4f, roll: %0.4f, pitch: %0.4f, parachute: %d throttle: %d, %d, %d\n"
+				//, yaw, roll, pitch, parachute_deploy, throttle_level2, throttle_level1, throttle_level0);
 			}
 
 		}
 
+		// alieron control happpens here
+		// on the right wing pwmWingR. paired with  left aileron
+		// max deflection degree = 25
+		// right joystick, x axies, representated by the variable roll
+		// if joystick is all the way to left -> roll left -> right aileron move down 25 degree, left move up 25
+		// note that the variable aileron_L and aileron_R controls the PWM duty cycles of the two alieron motors
+		// when these two variables are set to 150 servos stay in 90 degrees position
+		if (roll < 2.45){
+			// if joystick in this range roll to the left
+			aileron_L = 100+50*(roll/2.5);
+			aileron_R = 150+50*(roll/2.5);
+
+		}else if(roll > 2.55){
+			// rolling to right
+			aileron_R = 100+50*(roll/2.5);
+			aileron_L = 150+50*(roll/2.5);
+		}
+
+
+		// check if the parachute needs to be deployed
+		// if yes send digital high through pin 0.6
+		P0_6 = parachute_deploy;
+		
+		// sending the throttle level signal from RC slave to SPI slave
+		P1_0 = throttle_level2;
+		P1_1 = throttle_level1;
+		P1_2 = throttle_level0;
+		
 		waitms_or_RI1(100);
 	}
 }
