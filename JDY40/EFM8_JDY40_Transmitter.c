@@ -469,7 +469,7 @@ void main (void)
 
 		//sprintf(buff, "test %d\n",count++);
 		sendstr1(buff);
-		//printf("%s",buff);
+		printf("%s",buff);
 		
 		waitms_or_RI1(20);
 	}

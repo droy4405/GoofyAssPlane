@@ -7,14 +7,23 @@
 #define SYSCLK 72000000
 #define BAUDRATE 115200L
 #define TIMER_2_FREQ 3000L
+<<<<<<< HEAD
 #define AILERONSERVOL P1_1 //aileron servo
 #define AILERONSERVOR P1_2 
+=======
+#define WINGSERVOL P1_1 //aileron servo
+#define WINGSERVOR P1_2 
+>>>>>>> 53ff968ecdd1420ec83ff56f01e9980d3bae4b6c
 // #define ELEVSERVOL P1_3 //elevator left
 // #define ELEVSERVOR P1_4 //elevator right servo
 
 volatile unsigned int servo_counter=0;
+<<<<<<< HEAD
 volatile unsigned int aileron_counter=0;
 volatile unsigned char aileron_L=150, aileron_R=150;
+=======
+volatile unsigned char servo1=150, servo2=150;
+>>>>>>> 53ff968ecdd1420ec83ff56f01e9980d3bae4b6c
 
 idata char buff[22];
 volatile unsigned int pwm_reload;
@@ -99,13 +108,13 @@ char _c51_external_startup (void)
 	TR1 = 1; // START Timer1
 	TI = 1;  // Indicate TX0 ready
 
-	// Initialize timer 2 for periodic interrupts
-	TMR2CN0=0x00;   // Stop Timer2; Clear TF2;
-	CKCON0|=0b_0001_0000; // Timer 2 uses the system clock
-	TMR2RL=(0x10000L-(SYSCLK/(2*TIMER_2_FREQ))); // Initialize reload value
-	TMR2=0xffff;   // Set to reload immediately
-	ET2=1;         // Enable Timer2 interrupts
-	TR2=1;         // Start Timer2 (TMR2CN is bit addressable)
+	// // Initialize timer 2 for periodic interrupts
+	// TMR2CN0=0x00;   // Stop Timer2; Clear TF2;
+	// CKCON0|=0b_0001_0000; // Timer 2 uses the system clock
+	// TMR2RL=(0x10000L-(SYSCLK/(2*TIMER_2_FREQ))); // Initialize reload value
+	// TMR2=0xffff;   // Set to reload immediately
+	// ET2=1;         // Enable Timer2 interrupts
+	// TR2=1;         // Start Timer2 (TMR2CN is bit addressable)
 
 	// 	// Initialize timer 4 for periodic interrupts
 	// 	SFRPAGE=0x10;
@@ -133,6 +142,7 @@ char _c51_external_startup (void)
 
 // controlling PWM for servo motors on the receiver chip
 void Timer5_ISR (void) interrupt INTERRUPT_TIMER5
+<<<<<<< HEAD
 {
 
 	SFRPAGE=0x10;
@@ -171,18 +181,57 @@ void Timer5_ISR (void) interrupt INTERRUPT_TIMER5
 // if joystick is all the way to left -> roll left -> right aileron move down 25 degree, left move up 25
 
 void Timer2_ISR (void) interrupt INTERRUPT_TIMER2
+=======
+>>>>>>> 53ff968ecdd1420ec83ff56f01e9980d3bae4b6c
 {
-	SFRPAGE=0x0;
-	TF2H = 0; // Clear Timer2 interrupt flag
-   	TMR2RL=TMR2RL=0x10000L-(SYSCLK/(2*TIMER_2_FREQ));;
+	// SFRPAGE=0x10;
+	// TF5H = 0; // Clear Timer5 interrupt flag
+	// // Since the maximum time we can achieve with this timer in the
+	// // configuration above is about 10ms, implement a simple state
+	// // machine to produce the required 20ms period.
+	// switch (pwm_state)
+	// {
+	// 	// case 10:
+	// 	// 	//in this case the PWM is turned off
+	// 	// 	ESCOUT = 0;
+			
+	// 	case 0:
+	// 		timer5_elevL_out=1;
+	// 		TMR5RL=RELOAD_10MS;
+	// 		pwm_state=1;
+	// 		count20ms++;
+	// 	break;
 
+<<<<<<< HEAD
 	
 	aileron_counter++;
 
 	if(aileron_counter==2000)
+=======
+	// 	case 1:
+	// 		timer5_elevL_out=0;
+	// 		TMR5RL=RELOAD_10MS-timer5_elevL_pwm_reload;
+	// 		pwm_state=2;
+	// 	break;
+
+	// 	default:
+	// 		timer5_elevL_out=0;
+	// 		timer5_elevR_out=0;
+	// 		TMR5RL=timer5_elevL_pwm_reload;
+	// 		pwm_state=0;
+	// 	break;
+	// }
+
+	SFRPAGE=0x10;
+	TF5H = 0; // Clear Timer5 interrupt flag
+	TMR5RL=RELOAD_10us;
+	servo_counter++;
+	if(servo_counter==2000)
+>>>>>>> 53ff968ecdd1420ec83ff56f01e9980d3bae4b6c
 	{
 		aileron_counter=0;
 	}
+<<<<<<< HEAD
 	if(aileron_L>=aileron_counter)
 	{
 		AILERONSERVOL=1;
@@ -198,8 +247,100 @@ void Timer2_ISR (void) interrupt INTERRUPT_TIMER2
 	else
 	{
 		AILERONSERVOR=0;
+=======
+
+	if(timer5_elevL_pwm_Dcycle>=servo_counter)
+	{
+		timer5_elevL_out=1;
+	}
+	else
+	{
+		timer5_elevL_out=0;
+	}
+	if(timer5_elevR_pwm_Dcycle>=servo_counter)
+	{
+		timer5_elevR_out=1;
+	}
+	else
+	{
+		timer5_elevR_out=0;
+>>>>>>> 53ff968ecdd1420ec83ff56f01e9980d3bae4b6c
 	}
 }
+
+// timer 2 for controlling servos on the wings
+
+//pseudo code
+// on the right wing pwmWingR. paired with  left aileron
+// max deflection degree = 25
+// right joystick, left right dir
+// if joystick is all the way to left -> roll left -> right aileron move down 25 degree, left move up 25
+// 
+// void Timer2_ISR (void) interrupt INTERRUPT_TIMER5
+// {
+// 	SFRPAGE=0x10;
+// 	TF2H = 0; // Clear Timer2 interrupt flag
+// 	// Since the maximum time we can achieve with this timer in the
+// 	// configuration above is about 10ms, implement a simple state
+// 	// machine to produce the required 20ms period.
+// 	switch (pwm_state)
+// 	{
+// 		// case 10:
+// 		// 	//in this case the PWM is turned off
+// 		// 	ESCOUT = 0;
+			
+// 		case 0:
+// 			ESCOUT=1;
+// 			TMR2RL=RELOAD_10MS;
+// 			pwm_state=1;
+// 			count20ms++;
+// 		break;
+
+// 		case 1:
+// 			ESCOUT=0;
+// 			TMR2RL=RELOAD_10MS-pwm_reload;
+// 			pwm_state=2;
+// 		break;
+
+// 		default:
+// 			ESCOUT=0;
+// 			TMR2RL=pwm_reload;
+// 			pwm_state=0;
+// 		break;
+// 	}
+// }
+
+// void Timer2_ISR (void) interrupt INTERRUPT_TIMER2
+// {
+// 	SFRPAGE=0x0;
+// 	TF2H = 0; // Clear Timer2 interrupt flag
+//    	TMR2RL=TMR2RL=0x10000L-(SYSCLK/(2*TIMER_2_FREQ));;
+
+	
+// 	servo_counter++;
+
+// 	if(servo_counter==2000)
+// 	{
+// 		servo_counter=0;
+// 	}
+// 	if(servo1>=servo_counter)
+// 	{
+// 		SERVO1=1;
+// 	}
+// 	else
+// 	{
+// 		SERVO1=0;
+// 	}
+// 	if(servo2>=servo_counter)
+// 	{
+// 		SERVO2=1;
+// 	}
+// 	else
+// 	{
+// 		SERVO2=0;
+// 	}
+//     // TIMER_OUT_2=!TIMER_OUT_2;
+// }
 
 
 // Uses Timer3 to delay <us> micro-seconds. 
@@ -449,6 +590,15 @@ void main (void)
 				sPitchR[4] = '\0';
 				pitch = atoi(sPitchR)/1000.0;
 
+<<<<<<< HEAD
+=======
+				// for(l = 15; l < 19; l++){ 
+				// 	sThrottle[l-15] = buff[l];
+				// }
+				// sThrottle[4] = '\0';
+				// ThrottlePWM = atoi(sThrottle)/1000.0;
+
+>>>>>>> 53ff968ecdd1420ec83ff56f01e9980d3bae4b6c
 				for(l = 15; l < 16; l++){ 
 					sParachute[l-15] = buff[l];
 				}
@@ -475,6 +625,7 @@ void main (void)
 
 		}
 
+<<<<<<< HEAD
 		// alieron control happpens here
 		// on the right wing pwmWingR. paired with  left aileron
 		// max deflection degree = 25
@@ -494,6 +645,8 @@ void main (void)
 		}
 
 
+=======
+>>>>>>> 53ff968ecdd1420ec83ff56f01e9980d3bae4b6c
 		// check if the parachute needs to be deployed
 		// if yes send digital high through pin 0.6
 		P0_6 = parachute_deploy;
