@@ -9,6 +9,15 @@
 #define TIMER_2_FREQ 3000L
 #define AILERONSERVOL P1_1 //aileron servo
 #define AILERONSERVOR P1_2 
+
+#define timer5_elevL_out P1_7
+#define timer5_elevR_out P1_6
+
+#define ARMINGOUT P1_5
+
+#define RELOAD_10MS (0x10000L-(SYSCLK/(12L*100L)))
+#define RELOAD_10us (0x10000L-(SYSCLK/(12L*100000L))) // 10us rate
+
 // #define ELEVSERVOL P1_3 //elevator left
 // #define ELEVSERVOR P1_4 //elevator right servo
 
@@ -25,14 +34,6 @@ volatile unsigned char timer5_elevR_pwm_Dcycle = 150;
 
 volatile unsigned char pwm_state = 0;
 volatile unsigned char count20ms;
-
-#define timer5_elevL_out P1_7
-#define timer5_elevR_out P1_6
-
-#define ARMINGOUT P1_5
-
-#define RELOAD_10MS (0x10000L-(SYSCLK/(12L*100L)))
-#define RELOAD_10us (0x10000L-(SYSCLK/(12L*100000L))) // 10us rate
 
 char _c51_external_startup (void)
 {
@@ -100,13 +101,13 @@ char _c51_external_startup (void)
 	TR1 = 1; // START Timer1
 	TI = 1;  // Indicate TX0 ready
 
-	// // Initialize timer 2 for periodic interrupts
-	// TMR2CN0=0x00;   // Stop Timer2; Clear TF2;
-	// CKCON0|=0b_0001_0000; // Timer 2 uses the system clock
-	// TMR2RL=(0x10000L-(SYSCLK/(2*TIMER_2_FREQ))); // Initialize reload value
-	// TMR2=0xffff;   // Set to reload immediately
-	// ET2=1;         // Enable Timer2 interrupts
-	// TR2=1;         // Start Timer2 (TMR2CN is bit addressable)
+	// Initialize timer 2 for periodic interrupts
+	TMR2CN0=0x00;   // Stop Timer2; Clear TF2;
+	CKCON0|=0b_0001_0000; // Timer 2 uses the system clock
+	TMR2RL=RELOAD_10us; // Initialize reload value
+	TMR2=0xffff;   // Set to reload immediately
+	ET2=1;         // Enable Timer2 interrupts
+	TR2=1;         // Start Timer2 (TMR2CN is bit addressable)
 
 	// 	// Initialize timer 4 for periodic interrupts
 	// 	SFRPAGE=0x10;
@@ -173,24 +174,14 @@ void Timer5_ISR (void) interrupt INTERRUPT_TIMER5
 
 void Timer2_ISR (void) interrupt INTERRUPT_TIMER2
 {
-	// SFRPAGE=0x10;
-	// TF5H = 0; // Clear Timer5 interrupt flag
-	// // Since the maximum time we can achieve with this timer in the
-	// // configuration above is about 10ms, implement a simple state
-	// // machine to produce the required 20ms period.
-	// switch (pwm_state)
-	// {
-	// 	// case 10:
-	// 	// 	//in this case the PWM is turned off
-	// 	// 	ESCOUT = 0;
-			
-	// 	case 0:
-	// 		timer5_elevL_out=1;
-	// 		TMR5RL=RELOAD_10MS;
-	// 		pwm_state=1;
-	// 		count20ms++;
-	// 	break;
-
+	SFRPAGE=0x10;
+	TF2H = 0; // Clear Timer2 interrupt flag
+	TMR2RL=RELOAD_10us;
+	// Since the maximum time we can achieve with this timer in the
+	// configuration above is about 10ms, implement a simple state
+	// machine to produce the required 20ms period.
+	
+	
 	aileron_counter++;
 
 	if(aileron_counter==2000)
@@ -214,81 +205,6 @@ void Timer2_ISR (void) interrupt INTERRUPT_TIMER2
 		AILERONSERVOR=0;
 	}
 }
-
-// timer 2 for controlling servos on the wings
-
-//pseudo code
-// on the right wing pwmWingR. paired with  left aileron
-// max deflection degree = 25
-// right joystick, left right dir
-// if joystick is all the way to left -> roll left -> right aileron move down 25 degree, left move up 25
-// 
-// void Timer2_ISR (void) interrupt INTERRUPT_TIMER5
-// {
-// 	SFRPAGE=0x10;
-// 	TF2H = 0; // Clear Timer2 interrupt flag
-// 	// Since the maximum time we can achieve with this timer in the
-// 	// configuration above is about 10ms, implement a simple state
-// 	// machine to produce the required 20ms period.
-// 	switch (pwm_state)
-// 	{
-// 		// case 10:
-// 		// 	//in this case the PWM is turned off
-// 		// 	ESCOUT = 0;
-			
-// 		case 0:
-// 			ESCOUT=1;
-// 			TMR2RL=RELOAD_10MS;
-// 			pwm_state=1;
-// 			count20ms++;
-// 		break;
-
-// 		case 1:
-// 			ESCOUT=0;
-// 			TMR2RL=RELOAD_10MS-pwm_reload;
-// 			pwm_state=2;
-// 		break;
-
-// 		default:
-// 			ESCOUT=0;
-// 			TMR2RL=pwm_reload;
-// 			pwm_state=0;
-// 		break;
-// 	}
-// }
-
-// void Timer2_ISR (void) interrupt INTERRUPT_TIMER2
-// {
-// 	SFRPAGE=0x0;
-// 	TF2H = 0; // Clear Timer2 interrupt flag
-//    	TMR2RL=TMR2RL=0x10000L-(SYSCLK/(2*TIMER_2_FREQ));;
-
-	
-// 	servo_counter++;
-
-// 	if(servo_counter==2000)
-// 	{
-// 		servo_counter=0;
-// 	}
-// 	if(servo1>=servo_counter)
-// 	{
-// 		SERVO1=1;
-// 	}
-// 	else
-// 	{
-// 		SERVO1=0;
-// 	}
-// 	if(servo2>=servo_counter)
-// 	{
-// 		SERVO2=1;
-// 	}
-// 	else
-// 	{
-// 		SERVO2=0;
-// 	}
-//     // TIMER_OUT_2=!TIMER_OUT_2;
-// }
-
 
 // Uses Timer3 to delay <us> micro-seconds. 
 void Timer3us(unsigned char us)
