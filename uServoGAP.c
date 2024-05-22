@@ -11,8 +11,8 @@ volatile unsigned int servo_counter=0;
 volatile unsigned char servo1=150, servo2=150;
 
 #define COLPITTS P1_5
-#define SERVO1   P2_0
-#define SERVO2   P1_7
+#define SERVO1   P1_3
+#define SERVO2   P1_4
 #define EMAGNET  P1_6
 
 #define TIMER_2_FREQ 100000L
@@ -31,6 +31,7 @@ volatile unsigned char servo1=150, servo2=150;
 #define SYSCLK 72000000L // SYSCLK frequency in Hz
 #define BAUDRATE 115200L
 #define RELOAD_10us (0x10000L-(SYSCLK/(12L*100000L))) // 10us rate
+#define Timer2_rld (0x10000L-(SYSCLK/(2*TIMER_2_FREQ)));
 
 char _c51_external_startup (void)
 {
@@ -103,7 +104,7 @@ char _c51_external_startup (void)
 // Initialize timer 2 for periodic interrupts
 	TMR2CN0=0x00;   // Stop Timer2; Clear TF2;
 	CKCON0|=0b_0001_0000; // Timer 2 uses the system clock
-	TMR2RL=(0x10000L-(SYSCLK/(2*TIMER_2_FREQ))); // Initialize reload value
+	TMR2RL=RELOAD_10us; // Initialize reload value
 	TMR2=0xffff;   // Set to reload immediately
 	ET2=1;         // Enable Timer2 interrupts
 	TR2=1;         // Start Timer2 (TMR2CN is bit addressable)
@@ -136,7 +137,7 @@ void Timer2_ISR (void) interrupt INTERRUPT_TIMER2
 {
 	SFRPAGE=0x0;
 	TF2H = 0; // Clear Timer2 interrupt flag
-   	TMR2RL=TMR2RL=0x10000L-(SYSCLK/(2*TIMER_2_FREQ));;
+   	TMR2RL=Reload;
 
 	
 	servo_counter++;

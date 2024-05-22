@@ -11,13 +11,20 @@ volatile unsigned int servo_counter=0;
 volatile unsigned char servo1=150, servo2=150;
 
 #define COLPITTS P1_5
-#define SERVO1   P2_0
-#define SERVO2   P1_7
+#define SERVO1   P1_3
+#define ESCOUT P1_7
 #define EMAGNET  P1_6
+
+volatile unsigned int pwm_reload;
+volatile unsigned int pwm_motor_reload;
+volatile unsigned char pwm_state=0;
+volatile unsigned char pwm_state1=0;
+volatile unsigned char count20ms;
 
 #define SYSCLK 72000000L // SYSCLK frequency in Hz
 #define BAUDRATE 115200L
 #define RELOAD_10us (0x10000L-(SYSCLK/(12L*100000L))) // 10us rate
+#define RELOAD_10MS (0x10000L-(SYSCLK/(12L*100L)))
 
 char _c51_external_startup (void)
 {
@@ -87,12 +94,15 @@ char _c51_external_startup (void)
 	TR1 = 1; // START Timer1
 	TI = 1;  // Indicate TX0 ready
 
-	// Initialize timer 5 for periodic interrupts
+	// Initialize timer 4 for periodic interrupts
 	SFRPAGE=0x10;
-	TMR5CN0=0x00;
-	TMR5=0xffff;   // Set to reload immediately
-	EIE2|=0b_0000_1000; // Enable Timer5 interrupts
-	TR5=1;         // Start Timer5 (TMR5CN0 is bit addressable)
+	TMR4CN0=0x00;   // Stop Timer4; Clear TF4; WARNING: lives in SFR page 0x10
+	//CKCON1|=0b_0000_0001; // Timer 4 uses the system clock
+	//TMR4RL=(0x10000L-(SYSCLK/(2*TIMER_4_FREQ))); // Initialize reload value
+	pwm_motor_reload=0x10000L-(SYSCLK*1.0e-3)/12.0;
+	TMR4=0xffff;   // Set to reload immediately
+	EIE2|=0b_0000_0100;     // Enable Timer4 interrupts
+	TR4=1;
 	
 	EA=1; 
 	
@@ -101,31 +111,29 @@ char _c51_external_startup (void)
 	return 0;
 }
 
-void Timer5_ISR (void) interrupt INTERRUPT_TIMER5
+void Timer4_ISR (void) interrupt INTERRUPT_TIMER4
 {
 	SFRPAGE=0x10;
-	TF5H = 0; // Clear Timer5 interrupt flag
-	TMR5RL=RELOAD_10us;
-	servo_counter++;
-	if(servo_counter==2000)
+	TF4H = 0; // Clear Timer4 interrupt flag
+	
+	switch (pwm_state1)
 	{
-		servo_counter=0;
-	}
-	if(servo1>=servo_counter)
-	{
-		SERVO1=1;
-	}
-	else
-	{
-		SERVO1=0;
-	}
-	if(servo2>=servo_counter)
-	{
-		SERVO2=1;
-	}
-	else
-	{
-		SERVO2=0;
+	   case 0:
+	      ESCOUT=1;
+	      TMR4RL=RELOAD_10MS;
+	      pwm_state1=1;
+	      count20ms++;
+	   break;
+	   case 1:
+	      ESCOUT=0;
+	      TMR4RL=RELOAD_10MS-pwm_motor_reload;
+	      pwm_state1=2;
+	   break;
+	   default:
+	      ESCOUT=0;
+	      TMR4RL=pwm_motor_reload;
+	      pwm_state1=0;
+	   break;
 	}
 }
 
@@ -175,23 +183,13 @@ void main (void)
 	        "File: %s\n"
 	        "Compiled: %s, %s\n\n",
 	        __FILE__, __DATE__, __TIME__);
+	
+	count20ms=0; // Count20ms is an atomic variable, so no problem sharing with timer 5 ISR
+    while((1000/20)>count20ms); // Wait a second to give PuTTy a chance to start
 		
-while(1) {
-	for(k=0; k<4; k++)
-	{
-		for(j=80; j<220; j+=5)
-		{
-			servo1=j;
-			servo2=j;
-			waitms(20);
-		}
-		for(j=220; j>80; j-=5)
-		{
-			servo1=j;
-			servo2=j;
-			waitms(20);
-		}
+	while(1) {
+		pwm_motor_reload=0x10000L-(SYSCLK*1.5*1.0e-3)/12.0;
+		waitms(20);
 	}
-}
 
 }

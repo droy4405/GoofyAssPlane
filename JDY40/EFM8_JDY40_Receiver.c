@@ -7,11 +7,11 @@
 #define SYSCLK 72000000
 #define BAUDRATE 115200L
 #define TIMER_2_FREQ 3000L
-#define AILERONSERVOL P1_1 //aileron servo
-#define AILERONSERVOR P1_2 
+#define AILERONSERVOL P2_2 //aileron servo
+#define AILERONSERVOR P2_3 
 
-#define timer5_elevL_out P1_7
-#define timer5_elevR_out P1_6
+#define ELEVSERVOL P2_4 //elevator servo
+#define ELEVSERVOR P2_5
 
 #define ARMINGOUT P1_5
 
@@ -29,8 +29,9 @@ volatile unsigned char aileron_L=150, aileron_R=150;
 idata char buff[22];
 volatile unsigned int pwm_reload;
 
-volatile unsigned char timer5_elevL_pwm_Dcycle = 150;
-volatile unsigned char timer5_elevR_pwm_Dcycle = 150;
+volatile unsigned char elevator_counter=0;
+volatile unsigned char elevL_pwm_Dcycle = 150;
+volatile unsigned char elevR_pwm_Dcycle = 150;
 
 volatile unsigned char pwm_state = 0;
 volatile unsigned char count20ms;
@@ -84,7 +85,9 @@ char _c51_external_startup (void)
 	#endif
 	
 	P0MDOUT |= 0x11; // Enable UART0 TX (P0.4) and UART1 TX (P0.0) as push-pull outputs
-	P2MDOUT |= 0x01; // P2.0 in push-pull mode
+	//P1MDOUT |= 0x01;
+	P2MDOUT |= 0b_0011_1101; // P2.0 in push-pull mode
+	
 	XBR0     = 0x01; // Enable UART0 on P0.4(TX) and P0.5(RX)                     
 	XBR1     = 0X00;
 	XBR2     = 0x41; // Enable crossbar and uart 1
@@ -101,26 +104,27 @@ char _c51_external_startup (void)
 	TR1 = 1; // START Timer1
 	TI = 1;  // Indicate TX0 ready
 
-	// Initialize timer 2 for periodic interrupts
-	TMR2CN0=0x00;   // Stop Timer2; Clear TF2;
-	CKCON0|=0b_0001_0000; // Timer 2 uses the system clock
-	TMR2RL=RELOAD_10us; // Initialize reload value
-	TMR2=0xffff;   // Set to reload immediately
-	ET2=1;         // Enable Timer2 interrupts
-	TR2=1;         // Start Timer2 (TMR2CN is bit addressable)
+	// // Initialize timer 2 for periodic interrupts
+	// TMR2CN0=0x00;   // Stop Timer2; Clear TF2;
+	// CKCON0|=0b_0001_0000; // Timer 2 uses the system clock
+	// TMR2RL=(0x10000L-(SYSCLK/(2*TIMER_2_FREQ))); // Initialize reload value
+	// TMR2=0xffff;   // Set to reload immediately
+	// ET2=1;         // Enable Timer2 interrupts
+	// TR2=1;         // Start Timer2 (TMR2CN is bit addressable)
 
-	// 	// Initialize timer 4 for periodic interrupts
-	// 	SFRPAGE=0x10;
-	// 	TMR4CN0=0x00;   // Stop Timer4; Clear TF4; WARNING: lives in SFR page 0x10
-	// 	CKCON1|=0b_0000_0001; // Timer 4 uses the system clock
-	// 	TMR4RL=(0x10000L-(SYSCLK/(2*TIMER_4_FREQ))); // Initialize reload value
-	// 	TMR4=0xffff;   // Set to reload immediately
-	// 	EIE2|=0b_0000_0100;     // Enable Timer4 interrupts
-	// 	TR4=1;
+	// Initialize timer 4 for periodic interrupts
+	SFRPAGE=0x10;
+	TMR4CN0=0x00;   // Stop Timer4; Clear TF4; WARNING: lives in SFR page 0x10
+	//CKCON1|=0b_0000_0001; // Timer 4 uses the system clock
+	TMR4RL=RELOAD_10us; // Initialize reload value
+	TMR4=0xffff;   // Set to reload immediately
+	EIE2|=0b_0000_0100;     // Enable Timer4 interrupts
+	TR4=1;
 
   	// Initialize timer 5 for periodic interrupts
 	SFRPAGE=0x10;
 	TMR5CN0=0x00;
+	TMR5RL=RELOAD_10us;
 	// timer5_elevL_pwm_reload=0x10000L-(SYSCLK*1.5e-3)/12.0; // 1.5 miliseconds pulse is the center of the servo
 	TMR5=0xffff;   // Set to reload immediately
 	EIE2|=0b_0000_1000; // Enable Timer5 interrupts
@@ -133,54 +137,55 @@ char _c51_external_startup (void)
 	return 0;
 }
 
-// controlling PWM for servo motors on the receiver chip
-void Timer5_ISR (void) interrupt INTERRUPT_TIMER5
-{
-
-	SFRPAGE=0x10;
-	TF5H = 0; // Clear Timer5 interrupt flag
-	TMR5RL=RELOAD_10us;
-	servo_counter++;
-	if(servo_counter==2000)
-	{
-		servo_counter=0;
-	}
-
-	if(timer5_elevL_pwm_Dcycle>=servo_counter)
-	{
-		timer5_elevL_out=1;
-	}
-	else
-	{
-		timer5_elevL_out=0;
-	}
-	if(timer5_elevR_pwm_Dcycle>=servo_counter)
-	{
-		timer5_elevR_out=1;
-	}
-	else
-	{
-		timer5_elevR_out=0;
-	}
-}
-
-
-// timer 2 for controlling servos on the wings
-// pseudo code
+// timer 4 for controlling servos on the wings
 // on the right wing pwmWingR. paired with  left aileron
 // max deflection degree = 25
 // right joystick, left right dir
 // if joystick is all the way to left -> roll left -> right aileron move down 25 degree, left move up 25
 
-void Timer2_ISR (void) interrupt INTERRUPT_TIMER2
+void Timer4_ISR (void) interrupt INTERRUPT_TIMER4
 {
-	SFRPAGE=0x10;
-	TF2H = 0; // Clear Timer2 interrupt flag
-	TMR2RL=RELOAD_10us;
-	// Since the maximum time we can achieve with this timer in the
-	// configuration above is about 10ms, implement a simple state
-	// machine to produce the required 20ms period.
 	
+	SFRPAGE=0x10;
+	TF4H = 0; // Clear Timer5 interrupt flag
+	TMR4RL=RELOAD_10us;
+	
+	elevator_counter++;
+
+	if(elevator_counter==2000)
+	{
+		elevator_counter=0;
+	}
+	if(elevL_pwm_Dcycle>=elevator_counter)
+	{
+		ELEVSERVOL=1;
+	}
+	else
+	{
+		ELEVSERVOL=0;
+	}
+	if(elevR_pwm_Dcycle>=elevator_counter)
+	{
+		ELEVSERVOR=1;
+	}
+	else
+	{
+		ELEVSERVOR=0;
+	}
+}
+
+// timer 5 for controlling servos on the wings
+// on the right wing pwmWingR. paired with  left aileron
+// max deflection degree = 25
+// right joystick, left right dir
+// if joystick is all the way to left -> roll left -> right aileron move down 25 degree, left move up 25
+
+void Timer5_ISR (void) interrupt INTERRUPT_TIMER5
+{
+	
+	SFRPAGE=0x10;
+	TF5H = 0; // Clear Timer5 interrupt flag
+	TMR5RL=RELOAD_10us;
 	
 	aileron_counter++;
 
@@ -373,10 +378,9 @@ void main (void)
 	char sThrottle_level1[2];
 	char sThrottle_level0[2];
 
-	float pitch = 0;
-	float roll = 0;
-	float yaw = 0;
-	float fThrottle = 0;
+	float pitch = 2.5;
+	float roll = 2.5;
+	float yaw = 2.5;
 
 	int i,j,k,l,m;
 	int parachute_deploy = 0;
@@ -384,14 +388,6 @@ void main (void)
 	int throttle_level2 = 0;
 	int throttle_level1 = 0;
 	int throttle_level0 = 0;
-
-	//PWM variables
-	float ThrottlePWM;
-
-	//float motor_PWM_DutyCycleWidth = 1;
-
-	// this variable is only for testing purposes
-	int motor_on = 0;
 
 	count20ms=0; // Count20ms is an atomic variable, so no problem sharing with timer 5 ISR
 	waitms(500);
@@ -453,12 +449,6 @@ void main (void)
 				sPitchR[4] = '\0';
 				pitch = atoi(sPitchR)/1000.0;
 
-				// for(l = 15; l < 19; l++){ 
-				// 	sThrottle[l-15] = buff[l];
-				// }
-				// sThrottle[4] = '\0';
-				// ThrottlePWM = atoi(sThrottle)/1000.0;
-
 				for(l = 15; l < 16; l++){ 
 					sParachute[l-15] = buff[l];
 				}
@@ -479,30 +469,55 @@ void main (void)
 				// printf("Y: %0.4f, ",fYAngle);
 				// printf("T: %0.4f\n",potentiometerReading);
 
-				//printf("yaw: %0.4f, roll: %0.4f, pitch: %0.4f, parachute: %d throttle: %d, %d, %d\n"
-				//, yaw, roll, pitch, parachute_deploy, throttle_level2, throttle_level1, throttle_level0);
+				printf("yaw: %0.4f, roll: %0.4f, pitch: %0.4f, parachute: %d throttle: %d, %d, %d\n"
+				, yaw, roll, pitch, parachute_deploy, throttle_level2, throttle_level1, throttle_level0);
+			}
+		
+			// alieron control happpens here
+			// on the right wing pwmWingR. paired with  left aileron
+			// max deflection degree = 25
+			// right joystick, x axies, representated by the variable roll
+			// if joystick is all the way to left -> roll left -> right aileron move down 25 degree, left move up 25
+			// note that the variable aileron_L and aileron_R controls the PWM duty cycles of the two alieron motors
+			// when these two variables are set to 150 servos stay in 90 degrees position
+			if (roll < 2.3){
+				// if joystick in this range roll to the left
+				aileron_L = 150-50*(1.0-roll/2.3);
+				aileron_R = 150+50*(1.0-roll/2.3);
+				// aileron_R = 100;
+				// aileron_L = 200;
+
+			}else if(roll > 2.5){
+				// rolling to right
+				aileron_L = 150+50*((roll-2.5)/2.5);
+				aileron_R = 150-50*((roll-2.5)/2.5);
+				// aileron_L = 100;
+				// aileron_R = 200;
+			}else{
+				aileron_L = 150;
+				aileron_R = 150;
 			}
 
+			if (pitch < 2.3){
+				// if joystick in this range roll to the left
+				elevL_pwm_Dcycle = 150-50*(1.0-pitch/2.5);
+				elevR_pwm_Dcycle = 150+50*(1.0-pitch/2.5);
+				// aileron_R = 100;
+				// aileron_L = 200;
+
+			}else if(pitch > 2.5){
+				// rolling to right
+				elevL_pwm_Dcycle = 150+50*((pitch-2.5)/2.5);
+				elevR_pwm_Dcycle = 150-50*((pitch-2.5)/2.5);
+				// aileron_L = 100;
+				// aileron_R = 200;
+			}else{
+				elevL_pwm_Dcycle = 150;
+				elevR_pwm_Dcycle = 150;
+			}
+
+
 		}
-
-		// alieron control happpens here
-		// on the right wing pwmWingR. paired with  left aileron
-		// max deflection degree = 25
-		// right joystick, x axies, representated by the variable roll
-		// if joystick is all the way to left -> roll left -> right aileron move down 25 degree, left move up 25
-		// note that the variable aileron_L and aileron_R controls the PWM duty cycles of the two alieron motors
-		// when these two variables are set to 150 servos stay in 90 degrees position
-		if (roll < 2.45){
-			// if joystick in this range roll to the left
-			aileron_L = 100+50*(roll/2.5);
-			aileron_R = 150+50*(roll/2.5);
-
-		}else if(roll > 2.55){
-			// rolling to right
-			aileron_R = 100+50*(roll/2.5);
-			aileron_L = 150+50*(roll/2.5);
-		}
-
 
 		// check if the parachute needs to be deployed
 		// if yes send digital high through pin 0.6
