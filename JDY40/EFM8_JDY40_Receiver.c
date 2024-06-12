@@ -13,10 +13,12 @@
 #define ELEVSERVOL P2_4 //elevator servo
 #define ELEVSERVOR P2_5
 
+#define RUDDEROUT P2_6
+
 #define ARMINGOUT P1_5
 
-#define RELOAD_10MS (0x10000L-(SYSCLK/(12L*100L)))
 #define RELOAD_10us (0x10000L-(SYSCLK/(12L*100000L))) // 10us rate
+#define RELOAD_TIMER2 (0x10000L-(SYSCLK/(12L*8000L))) // reload for timer 2 only
 
 // #define ELEVSERVOL P1_3 //elevator left
 // #define ELEVSERVOR P1_4 //elevator right servo
@@ -24,6 +26,8 @@
 volatile unsigned int servo_counter=0;
 volatile unsigned int aileron_counter=0;
 volatile unsigned char aileron_L=150, aileron_R=150;
+volatile unsigned int rudder_counter=0;
+volatile unsigned int rudder=150;
 
 
 idata char buff[22];
@@ -86,7 +90,7 @@ char _c51_external_startup (void)
 	
 	P0MDOUT |= 0x11; // Enable UART0 TX (P0.4) and UART1 TX (P0.0) as push-pull outputs
 	//P1MDOUT |= 0x01;
-	P2MDOUT |= 0b_0011_1101; // P2.0 in push-pull mode
+	P2MDOUT |= 0b_0111_1101; // P2.0 in push-pull mode
 	
 	XBR0     = 0x01; // Enable UART0 on P0.4(TX) and P0.5(RX)                     
 	XBR1     = 0X00;
@@ -104,13 +108,13 @@ char _c51_external_startup (void)
 	TR1 = 1; // START Timer1
 	TI = 1;  // Indicate TX0 ready
 
-	// // Initialize timer 2 for periodic interrupts
-	// TMR2CN0=0x00;   // Stop Timer2; Clear TF2;
-	// CKCON0|=0b_0001_0000; // Timer 2 uses the system clock
-	// TMR2RL=(0x10000L-(SYSCLK/(2*TIMER_2_FREQ))); // Initialize reload value
-	// TMR2=0xffff;   // Set to reload immediately
-	// ET2=1;         // Enable Timer2 interrupts
-	// TR2=1;         // Start Timer2 (TMR2CN is bit addressable)
+	// Initialize timer 2 for periodic interrupts
+	TMR2CN0=0x00;   // Stop Timer2; Clear TF2;
+	CKCON0|=0b_0001_0000; // Timer 2 uses the system clock
+	TMR2RL=RELOAD_TIMER2; // Initialize reload value
+	TMR2=0xffff;   // Set to reload immediately
+	ET2=1;         // Enable Timer2 interrupts
+	TR2=1;         // Start Timer2 (TMR2CN is bit addressable)
 
 	// Initialize timer 4 for periodic interrupts
 	SFRPAGE=0x10;
@@ -208,6 +212,29 @@ void Timer5_ISR (void) interrupt INTERRUPT_TIMER5
 	else
 	{
 		AILERONSERVOR=0;
+	}
+}
+
+// Uses Timer 2 to control rudder motion
+void Timer2_ISR (void) interrupt INTERRUPT_TIMER2
+{
+	SFRPAGE=0x0;
+	TF2H = 0; // Clear Timer2 interrupt flag
+	TMR2RL=RELOAD_TIMER2;
+
+	rudder_counter++;
+
+	if(rudder_counter==2000)
+	{
+		rudder_counter=0;
+	}
+	if(rudder>=rudder_counter)
+	{
+		RUDDEROUT=1;
+	}
+	else
+	{
+		RUDDEROUT=0;
 	}
 }
 
@@ -382,7 +409,7 @@ void main (void)
 	float roll = 2.5;
 	float yaw = 2.5;
 
-	int i,j,k,l,m;
+	int i,j,k,m;
 	int parachute_deploy = 0;
 
 	int throttle_level2 = 0;
@@ -449,9 +476,7 @@ void main (void)
 				sPitchR[4] = '\0';
 				pitch = atoi(sPitchR)/1000.0;
 
-				for(l = 15; l < 16; l++){ 
-					sParachute[l-15] = buff[l];
-				}
+				sParachute[0] = buff[15];
 				sParachute[1] = '\0';
 				parachute_deploy = atoi(sParachute);
 				
@@ -469,8 +494,8 @@ void main (void)
 				// printf("Y: %0.4f, ",fYAngle);
 				// printf("T: %0.4f\n",potentiometerReading);
 
-				printf("yaw: %0.4f, roll: %0.4f, pitch: %0.4f, parachute: %d throttle: %d, %d, %d\n"
-				, yaw, roll, pitch, parachute_deploy, throttle_level2, throttle_level1, throttle_level0);
+				//printf("yaw: %0.4f, roll: %0.4f, pitch: %0.4f, parachute: %d throttle: %d, %d, %d\n"
+				//, yaw, roll, pitch, parachute_deploy, throttle_level2, throttle_level1, throttle_level0);
 			}
 		
 			// alieron control happpens here
@@ -516,6 +541,26 @@ void main (void)
 				elevR_pwm_Dcycle = 150;
 			}
 
+			if (yaw < 2.3){
+				// if joystick in this range roll to the left
+				rudder = 150-50*(1.0-yaw/2.5);
+				// aileron_R = 100;
+				// aileron_L = 200;
+
+			}else if(yaw > 2.5){
+				// rolling to right
+				rudder = 150+50*((yaw-2.5)/2.5);
+				// aileron_L = 100;
+				// aileron_R = 200;
+			}else{
+				rudder = 150;
+			}
+
+			//printf("aileronL: %d aileronR: %d elevatorL: %d elevatorR: %d parachute: %d\n"
+			//, aileron_L, aileron_R, elevL_pwm_Dcycle, elevR_pwm_Dcycle, parachute_deploy);
+
+			// printf("aileronL: %d \n"
+			// , aileron_L);
 
 		}
 
