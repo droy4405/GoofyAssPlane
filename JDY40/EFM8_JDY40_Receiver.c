@@ -457,7 +457,7 @@ void main (void)
 			getstr1(buff);
 			// checking the length of buff to determine if there is data loss
 			if(strlen(buff) == 22){
-				//printf("%s\n", buff);
+				printf("%s\n", buff);
 				for(i = 0; i < 4; i++){
 					sYawL[i] = buff[i];
 				}
@@ -572,6 +572,7 @@ void main (void)
 		P1_0 = throttle_level2;
 		P1_1 = throttle_level1;
 		P1_2 = throttle_level0;
+		//printf("%d %d %d \n", throttle_level2, throttle_level1, throttle_level0);
 		
 		waitms_or_RI1(100);
 	}

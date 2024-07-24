@@ -295,10 +295,8 @@ void main (void)
 			// determine if the engine is armed and then assign duty cycle
 			if(engine_armed){
 				pwm_motor_reload=0x10000L-(SYSCLK*engine_Dcycle*1.0e-3)/12.0;
-			}else{
-				pwm_motor_reload=0x10000L-(SYSCLK*1.0*1.0e-3)/12.0;
 			}
-
+			
 			pwm_reload=0x10000L-(SYSCLK*1.0e-3)/12.0;
 
 		}
